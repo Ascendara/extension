@@ -1,7 +1,7 @@
 <div align="center">
     </a>
     <br />
-    <img align="center" width="128" height="128" src="https://raw.githubusercontent.com/tagoWorks/ascendara/63dcff41e7dce893042b57047542a580beae0db6/readme/ascendara.png">
+    <img align="center" width="128" height="128" src="/readme/ascendara.png">
     <br />
     <br />
     
@@ -15,3 +15,7 @@
 > With the Ascendara Download Blocker you can easily block all downloads from starting, and get a window showing the direct download URL. This Chrome extension is used mainly to obtain links faster to copy and paste into Ascendara.
 
 ## Download Ascendara right now! https://ascendara.app/
+
+#### When a download attempts to start, this window will show
+
+<img src="/readme/showcase.png">
