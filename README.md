@@ -27,11 +27,12 @@ Since I haven't published the extension to the Chrome extension store, you need 
 7. Enable the extension
 
 # How to use the extension
-1. Pin the extension for ease-of-use
-2. Before you start a download, click the extension Ascendara logo and enable the blocker
-3. Start the download
-4. Copy the DDL into Ascendara to start downloading your game
+#### Pin the extension for ease-of-use!
+1. Before you start a download, click the extension Ascendara logo and enable the blocker
+2. Start the download
+3. Copy the DDL into Ascendara to start downloading your game
+4. Disable the blocker to allow downloads again
 
 ### Report any issues you find here or in the discord!
-
+### Showcase of blocked download:
 <img src="/readme/showcase.png">
