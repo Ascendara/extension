@@ -20,7 +20,7 @@
 Since I haven't published the extension to the Chrome extension store, you need to manually download and set it up. Once this project gets more attention I will upload it.
 1. Download the repo files by clicking on ```Code``` then ```Download ZIP```
 2. Unzip the files into a directory
-3. In your browser (I reccomend [Arc]() to block all the ads and popups) go to the ```Manage Extensions``` tab
+3. In your browser (I recommend [Arc]() to block all the ads and popups) go to the ```Manage Extensions``` tab
 4. Enable ```Developer mode```
 5. Click on ```Load Unpacked```
 6. Select the files you just downloaded
