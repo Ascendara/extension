@@ -17,7 +17,7 @@
 ## Download Ascendara right now! https://ascendara.app/
 
 # How to install the extension
-Since I haven't published the extension to the Chrome extension store, you need to manually download and set it up. Once this project gets more attention I will upload it.
+This is a step by step on how to download and load the extension in developer mode. I recommend that you add it to your browser [here](https://chromewebstore.google.com/detail/ascendara-download-blocke/ealmaonflbncbmofgpniamdfgobliffm).
 1. Download the repo files by clicking on ```Code``` then ```Download ZIP```
 2. Unzip the files into a directory
 3. In your browser (I recommend [Arc](https://arc.net/download) to block all the ads and popups) go to the ```Manage Extensions``` tab
