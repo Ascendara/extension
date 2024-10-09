@@ -1,17 +1,19 @@
+const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
+
 document.addEventListener('DOMContentLoaded', function() {
   const toggleSwitch = document.getElementById('toggleSwitch');
   const statusText = document.getElementById('status');
 
-  chrome.storage.sync.get('isBlocking', function(data) {
+  browserAPI.storage.sync.get('isBlocking', function(data) {
     toggleSwitch.checked = data.isBlocking;
     updateStatus(data.isBlocking);
   });
 
   toggleSwitch.addEventListener('change', function() {
     const isBlocking = this.checked;
-    chrome.storage.sync.set({isBlocking: isBlocking}, function() {
+    browserAPI.storage.sync.set({isBlocking: isBlocking}, function() {
       updateStatus(isBlocking);
-      chrome.runtime.sendMessage({action: 'updateBlockingStatus', isBlocking: isBlocking});
+      browserAPI.runtime.sendMessage({action: 'updateBlockingStatus', isBlocking: isBlocking});
     });
   });
 

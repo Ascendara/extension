@@ -1,8 +1,8 @@
 {
-    "manifest_version": 3,
+    "manifest_version": 2,
     "name": "Ascendara Download Blocker",
     "version": "1.1",
-    "description": "Chrome extension to block all downloads from starting.",
+    "description": "Browser extension to block all downloads from starting.",
     "permissions": [
       "downloads",
       "storage"
@@ -14,14 +14,27 @@
       "128": "icons/ascendara-128.png"
     },
     "background": {
-      "service_worker": "background.js"
+      "scripts": ["background.js"],
+      "persistent": false
     },
-    "action": {
+    "browser_action": {
       "default_popup": "popup.html",
       "default_icon": {
         "16": "icons/ascendara-16.png",
         "48": "icons/ascendara-48.png",
         "128": "icons/ascendara-128.png"
       }
-    }
+    },
+    "browser_specific_settings": {
+      "gecko": {
+        "id": "ascendara-download-blocker@ascendara.app",
+        "strict_min_version": "57.0"
+      }
+    },
+    "content_scripts": [
+      {
+        "matches": ["*://*/confirmation.html"],
+        "js": ["confirmation.js"]
+      }
+    ]
 }
