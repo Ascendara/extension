@@ -1,93 +1,413 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Ascendara Download Blocker</title>
-  <script src="popup.js"></script>
+  <title>Ascendara Download Handler</title>
+  <script type="module" src="utils.js"></script>
+  <script type="module" src="popup.js"></script>
   <style>
-    body {
-      width: 250px;
-      height: 170px;
+    :root {
+      --primary: #7E57C2;
+      --primary-glow: #B388FF;
+      --surface: #1E1E1E;
+      --background: #121212;
+      --text: #FFFFFF;
+      --text-secondary: rgba(255, 255, 255, 0.7);
+    }
+
+    * {
+      box-sizing: border-box;
       margin: 0;
-      background-color: #121212;
-      color: #e0e0e0;
-      font-family: Arial, sans-serif;
+      padding: 0;
+    }
+
+    body {
+      width: 280px;
+      height: 320px;
+      background: radial-gradient(circle at center, #1a1a1a, var(--background));
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 24px;
       text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .github-link {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px;
+      color: var(--text-secondary);
+      opacity: 0.7;
+      transition: all 0.2s ease;
+      border-radius: 50%;
+      text-decoration: none;
+      z-index: 20;
+    }
+
+    .github-link:hover {
+      background: rgba(255, 255, 255, 0.05);
+      opacity: 1;
+    }
+
+    .github-link svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .main-content {
+      width: 100%;
+      min-height: 100%;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 10px;
+      transition: transform 0.3s ease;
+      padding: 48px 0;
+      margin-top: 20px;
+    }
+
+    .toggle-wrapper {
       position: relative;
+      margin-bottom: 32px;
     }
-    h2 {
-      margin: 0;
-      font-size: 18px;
-      font-weight: 400;
-    }
-    .switch {
-      margin: 20px 0;
-      position: relative;
-      display: inline-block;
-      width: 60px;
-      height: 34px;
-    }
-    .switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-    .slider {
-      position: absolute;
+
+    .toggle-button {
+      width: 140px;
+      height: 140px;
+      background: var(--surface);
+      border-radius: 50%;
       cursor: pointer;
+      position: relative;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: none;
+      outline: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1;
+    }
+
+    .toggle-button::before {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      background: conic-gradient(
+        from 0deg,
+        transparent,
+        var(--primary-glow),
+        transparent 60%
+      );
+      border-radius: 50%;
+      z-index: -1;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .toggle-button::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, var(--surface) 60%, transparent);
+      border-radius: 50%;
+      z-index: -1;
+    }
+
+    .toggle-button:hover {
+      transform: scale(1.02);
+    }
+
+    .toggle-button.active {
+      background: var(--primary);
+      box-shadow: 0 0 30px rgba(126, 87, 194, 0.3);
+    }
+
+    .toggle-button.active::before {
+      opacity: 1;
+      animation: rotate 4s linear infinite;
+    }
+
+    .aura {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 160px;
+      height: 160px;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .active .aura::before {
+      content: '';
+      position: absolute;
+      inset: -10px;
+      background: radial-gradient(circle at center, 
+        rgba(126, 87, 194, 0.15),
+        transparent 70%
+      );
+      border-radius: 50%;
+      animation: pulse 2s ease-out infinite;
+    }
+
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(0.95);
+        opacity: 0.5;
+      }
+      50% {
+        transform: scale(1.05);
+        opacity: 0.8;
+      }
+      100% {
+        transform: scale(0.95);
+        opacity: 0.5;
+      }
+    }
+
+    .icon {
+      width: 48px;
+      height: 48px;
+      position: relative;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .icon svg {
+      width: 100%;
+      height: 100%;
+      fill: none;
+      stroke: var(--text);
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: all 0.3s ease;
+    }
+
+    .active .icon {
+      transform: scale(0.9) translateY(2px);
+    }
+
+    .active .icon svg {
+      stroke: var(--text);
+      filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.4));
+    }
+
+    .status {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 32px;
+      transition: color 0.3s ease;
+    }
+
+    .active ~ .status {
+      color: var(--text);
+    }
+
+    .settings-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .settings {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-secondary);
+      font-size: 13px;
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 20px;
+      transition: all 0.2s ease;
+      border: none;
+      background: none;
+      cursor: pointer;
+      opacity: 0.7;
+    }
+
+    .settings:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text);
+      opacity: 1;
+    }
+
+    .domains-panel {
+      position: absolute;
       top: 0;
       left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: #444;
-      transition: .4s;
-      border-radius: 34px;
+      width: 100%;
+      height: 100%;
+      background: var(--background);
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+      padding: 16px;
+      padding-top: 24px;
+      z-index: 10;
     }
-    .slider:before {
-      position: absolute;
-      content: "";
-      height: 26px;
-      width: 26px;
-      left: 4px;
-      bottom: 4px;
-      background-color: #e0e0e0;
-      transition: .4s;
-      border-radius: 50%;
+
+    .domains-panel.show {
+      transform: translateX(0);
     }
-    input:checked + .slider {
-      background-color: #2196F3;
+
+    .domains-panel.show ~ .main-content {
+      transform: translateX(-100%);
     }
-    input:checked + .slider:before {
-      transform: translateX(26px);
+
+    .domains-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 16px;
+      gap: 12px;
     }
-    #status {
-      margin-top: 10px;
-      font-size: 16px;
-      font-weight: 300;
+
+    .back-button {
+      background: none;
+      border: none;
+      color: var(--text);
+      cursor: pointer;
+      padding: 8px;
+      font-size: 18px;
     }
-    .github-icon {
-      position: absolute;
-      bottom: 10px;
-      left: 10px;
-      width: 20px;
-      height: auto;
+
+    .domain-input {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    #domainInput {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+
+    #addDomain {
+      background: var(--primary);
+      color: var(--text);
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s ease;
+    }
+
+    #addDomain:hover {
+      background: var(--primary-glow);
+    }
+
+    .domain-list {
+      overflow-y: auto;
+      max-height: calc(100% - 120px);
+    }
+
+    .domain-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: rgba(255, 255, 255, 0.02);
+      margin-bottom: 8px;
+      border-radius: 6px;
+    }
+
+    .domain-item span {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .remove-domain {
+      background: none;
+      border: none;
+      color: #ef5350;
+      cursor: pointer;
+      padding: 4px 8px;
+      font-size: 12px;
+      opacity: 0.8;
+      transition: opacity 0.2s;
+    }
+
+    .remove-domain:hover {
+      opacity: 1;
     }
   </style>
 </head>
 <body>
-  <h2>Download Blocker</h2>
-  <label class="switch">
-    <input type="checkbox" id="toggleSwitch">
-    <span class="slider"></span>
-  </label>
-  <p id="status">Disabled</p>
-  <a href="https://github.com/t-a-g-o/AscendaraDownloadBlocker" class="github-link" target="_blank" rel="noopener noreferrer">
-    <img src="icons/github.png" alt="GitHub" class="github-icon">
-  </a>
-  <script src="popup.js"></script>
+  <div class="container">
+    <a href="https://github.com/t-a-g-o/ascendaradownloadhandler" target="_blank" class="github-link" title="View on GitHub">
+      <svg viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.604-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
+      </svg>
+    </a>
+    <div class="domains-panel" id="domainsPanel">
+      <div class="domains-header">
+        <button class="back-button" id="backButton">
+          <svg viewBox="0 0 52 52" width="16" height="16" fill="white">
+            <path d="M48.6,23H15.4c-0.9,0-1.3-1.1-0.7-1.7l9.6-9.6c0.6-0.6,0.6-1.5,0-2.1l-2.2-2.2c-0.6-0.6-1.5-0.6-2.1,0
+L2.5,25c-0.6,0.6-0.6,1.5,0,2.1L20,44.6c0.6,0.6,1.5,0.6,2.1,0l2.1-2.1c0.6-0.6,0.6-1.5,0-2.1l-9.6-9.6C14,30.1,14.4,29,15.3,29
+h33.2c0.8,0,1.5-0.6,1.5-1.4v-3C50,23.8,49.4,23,48.6,23z"/>
+          </svg>
+        </button>
+        <h3>Domains to Send</h3>
+      </div>
+      <div class="domain-input">
+        <input type="text" id="domainInput" placeholder="Enter domain to block">
+        <button id="addDomain">Add</button>
+      </div>
+      <div id="domainList" class="domain-list"></div>
+    </div>
+    
+    <div class="main-content">
+      <div class="toggle-wrapper">
+        <button class="toggle-button" id="toggleButton">
+          <div class="icon">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16"/>
+            </svg>
+          </div>
+        </button>
+        <div class="aura"></div>
+      </div>
+      <div id="statusText" class="status">Downloads going to browser</div>
+      <div class="settings-row">
+        <button class="settings" id="settingsButton">
+          <svg viewBox="0 0 36 36" width="24" height="24" fill="white">
+            <path class="clr-i-solid clr-i-solid-path-1" d="M32.57,15.72l-3.35-1a11.65,11.65,0,0,0-.95-2.33l1.64-3.07a.61.61,0,0,0-.11-.72L27.41,6.2a.61.61,0,0,0-.72-.11L23.64,7.72a11.62,11.62,0,0,0-2.36-1l-1-3.31A.61.61,0,0,0,19.69,3H16.31a.61.61,0,0,0-.58.43l-1,3.3a11.63,11.63,0,0,0-2.38,1l-3,1.62a.61.61,0,0,0-.72.11L6.2,8.59a.61.61,0,0,0-.11.72l1.62,3a11.63,11.63,0,0,0-1,2.37l-3.31,1a.61.61,0,0,0-.43.58v3.38a.61.61,0,0,0,.43.58l3.33,1a11.62,11.62,0,0,0,1,2.33L6.09,26.69a.61.61,0,0,0,.11.72L8.59,29.8a.61.61,0,0,0,.72.11l3.09-1.65a11.65,11.65,0,0,0,2.3.94l1,3.37a.61.61,0,0,0,.58.43h3.38a.61.61,0,0,0,.58-.43l1-3.38a11.63,11.63,0,0,0,2.28-.94l3.11,1.66a.61.61,0,0,0,.72-.11l2.39-2.39a.61.61,0,0,0,.11-.72l-1.66-3.1a11.63,11.63,0,0,0,.95-2.29l3.37-1a.61.61,0,0,0,.43-.58V16.31A.61.61,0,0,0,32.57,15.72ZM18,23.5A5.5,5.5,0,1,1,23.5,18,5.5,5.5,0,0,1,18,23.5Z"></path>
+          </svg>
+          Advanced Options
+        </button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

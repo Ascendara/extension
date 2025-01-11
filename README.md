@@ -6,18 +6,18 @@
     <br />
     
     
-   ![GitHub last commit](https://img.shields.io/github/last-commit/t-a-g-o/ascendaradownloadblocker)
-   ![GitHub issues](https://img.shields.io/github/issues-raw/t-a-g-o/ascendaradownloadblocker)
-   ![GitHub](https://img.shields.io/github/license/t-a-g-o/ascendaradownloadblocker)
+   ![GitHub last commit](https://img.shields.io/github/last-commit/t-a-g-o/ascendaradownloadhandler)
+   ![GitHub issues](https://img.shields.io/github/issues-raw/t-a-g-o/ascendaradownloadhandler)
+   ![GitHub](https://img.shields.io/github/license/t-a-g-o/ascendaradownloadhandler)
     
 </div>
 
-> With the Ascendara Download Blocker you can easily block all downloads from starting, and get a window showing the direct download URL. This Chrome extension is used mainly to obtain links faster to copy and paste into Ascendara.
+> The Ascendara Download Handler is a browser extension that sends downloads from known (or added) provider straight to Ascendara. Download games 50% faster just by enabling the extension! Never worry about having to turn it off or on manually, the extension detects when a download starts and sends it to Ascendara.
 
 ## Download Ascendara right now! https://ascendara.app/
 
 # How to install the extension
-This is a step by step on how to download and load the extension in developer mode. I recommend that you add it to your browser [here](https://chromewebstore.google.com/detail/ascendara-download-blocke/ealmaonflbncbmofgpniamdfgobliffm).
+This is a step by step on how to download and load the extension in developer mode. I recommend that you add it to your browser [here]().
 1. Download the repo files by clicking on ```Code``` then ```Download ZIP```
 2. Unzip the files into a directory
 3. In your browser (I recommend [Arc](https://arc.net/download) to block all the ads and popups) go to the ```Manage Extensions``` tab
@@ -28,11 +28,13 @@ This is a step by step on how to download and load the extension in developer mo
 
 # How to use the extension
 #### Pin the extension for ease-of-use!
-1. Before you start a download, click the extension Ascendara logo and enable the blocker
-2. Start the download
-3. Copy the DDL into Ascendara to start downloading your game
-4. Disable the blocker to allow downloads again
+1. Once you installed the extension, enable it
+2. Once a download starts you will get a prompt asking to open Ascendara
+3. Click on the button that says "open in Ascendara"
+4. It will open a new tab and the download will start automatically
 
 ### Report any issues you find here or in the discord!
-### Showcase of blocked download:
-<img src="/readme/showcase.png">
+
+# Showcase
+![extensionDisabled](/readme/disabled.png)
+![extensionEnabled](/readme/enabled.png)
