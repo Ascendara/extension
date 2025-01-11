@@ -1,8 +1,5 @@
 import { browserAPI } from './utils.js';
 
-// Track handled downloads to prevent duplicate handling
-const handledDownloads = new Set();
-
 // Default blocked domains
 const defaultBlockedDomains = [
   'megadb.xyz',
@@ -11,9 +8,10 @@ const defaultBlockedDomains = [
   'buzzheavier.com'
 ];
 
-browserAPI.runtime.onInstalled.addListener(() => {
-  browserAPI.storage.sync.set({
-    isEnabled: false,
+// Initialize the extension
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.storage.sync.set({
+    isEnabled: true,
     blockedDomains: defaultBlockedDomains
   });
 });
@@ -37,9 +35,7 @@ function isDomainBlocked(domain, blockedDomains) {
 }
 
 // Function to handle sending download to Ascendara
-function handleDownload(downloadItem) {
-  if (handledDownloads.has(downloadItem.id)) return;
-
+async function handleDownload(downloadItem) {
   let url = downloadItem.finalUrl || downloadItem.url;
   if (!url) {
     console.error("Failed to get download URL");
@@ -48,47 +44,39 @@ function handleDownload(downloadItem) {
 
   const domain = extractDomain(url);
   
-  browserAPI.storage.sync.get(['isEnabled', 'blockedDomains'], function(data) {
-    const isEnabled = data.isEnabled || false;
+  try {
+    const data = await chrome.storage.sync.get(['isEnabled', 'blockedDomains']);
+    const isEnabled = data.isEnabled ?? true;
     const blockedDomains = data.blockedDomains || defaultBlockedDomains;
     
     if (isEnabled && isDomainBlocked(domain, blockedDomains)) {
-      // Mark this download as handled
-      handledDownloads.add(downloadItem.id);
-
-      // Cancel the browser download since we're sending it to Ascendara
-      browserAPI.downloads.cancel(downloadItem.id, function() {
-        browserAPI.downloads.erase({ id: downloadItem.id }, function() {
-          // Get the current tab that initiated the download
-          browserAPI.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-            if (tabs && tabs.length > 0) {
-              // Update the current tab with the Ascendara protocol
-              browserAPI.tabs.update(tabs[0].id, {
-                url: 'Ascendara://' + url
-              });
-            }
+      try {
+        await chrome.downloads.cancel(downloadItem.id);
+        await chrome.downloads.erase({ id: downloadItem.id });
+        
+        const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (tabs && tabs.length > 0) {
+          await chrome.tabs.update(tabs[0].id, {
+            url: 'Ascendara://' + url
           });
-        });
-      });
+        }
+      } catch (error) {
+        console.error('Error handling download:', error);
+      }
     }
-  });
+  } catch (error) {
+    console.error('Error getting storage:', error);
+  }
 }
 
-// Listen for download creation
-browserAPI.downloads.onCreated.addListener(handleDownload);
+// Set up download listeners
+chrome.downloads.onCreated.addListener(handleDownload);
 
 // Also listen for download state changes to catch any that slip through
-browserAPI.downloads.onChanged.addListener(function(delta) {
-  if (handledDownloads.has(delta.id)) return;
-  
-  browserAPI.downloads.search({id: delta.id}, function(downloads) {
+chrome.downloads.onChanged.addListener((delta) => {
+  chrome.downloads.search({id: delta.id}, (downloads) => {
     if (downloads && downloads.length > 0) {
       handleDownload(downloads[0]);
     }
   });
 });
-
-// Clear handled downloads periodically (every hour)
-setInterval(() => {
-  handledDownloads.clear();
-}, 3600000);
