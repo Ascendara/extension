@@ -27,11 +27,10 @@ This is a step by step on how to download and load the extension in developer mo
 7. Enable the extension
 
 # How to use the extension
-#### Pin the extension for ease-of-use!
 1. Once you installed the extension, enable it
-2. Once a download starts you will get a prompt asking to open Ascendara
-3. Click on the button that says "open in Ascendara"
-4. It will open a new tab and the download will start automatically
+2. When a download starts you will get a prompt asking to open Ascendara
+3. Toggle the box that always opens the application
+4. Click on the button that says "open in Ascendara"
 
 ### Report any issues you find here or in the discord!
 
