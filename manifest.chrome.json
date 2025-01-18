@@ -1,11 +1,12 @@
 {
     "manifest_version": 3,
     "name": "Ascendara Download Handler",
-    "version": "2.2",
-    "description": "Redirects downloads from specific file hosting websites to the Ascendara Download Manager for better download handling and management.",
+    "version": "2.3",
+    "description": "Sends downloads from known (or added) providers straight to Ascendara.",
     "permissions": [
-        "downloads",
-        "storage"
+      "downloads",
+      "storage",
+      "tabs"
     ],
     "host_permissions": [
         "*://*.megadb.xyz/*",
@@ -30,4 +31,5 @@
             "128": "icons/ascendara-128.png"
         }
     }
-}
+  }
+  
