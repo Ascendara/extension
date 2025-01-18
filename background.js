@@ -1,13 +1,5 @@
 // Use the appropriate browser API
-let browserAPI;
-if (typeof browser !== 'undefined' && browser.runtime) {
-  browserAPI = browser;
-} else if (typeof chrome !== 'undefined' && chrome.runtime) {
-  browserAPI = chrome;
-} else {
-  console.error('No compatible browser API found');
-  browserAPI = chrome; // Fallback to chrome
-}
+const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
 
 // Default blocked domains
 const defaultBlockedDomains = [
@@ -81,10 +73,8 @@ async function handleDownload(downloadItem, suggest) {
         // Redirect to Ascendara
         const tabs = await browserAPI.tabs.query({ active: true, currentWindow: true });
         if (tabs && tabs.length > 0) {
-          // Ensure URL is properly encoded and handle both HTTP and HTTPS
-          const encodedUrl = encodeURIComponent(url);
           await browserAPI.tabs.update(tabs[0].id, {
-            url: `ascendara://${encodedUrl}`
+            url: 'ascendara://' + url
           });
         }
       } catch (error) {

@@ -1,8 +1,8 @@
 {
     "manifest_version": 2,
     "name": "Ascendara Download Handler",
-    "version": "2.3",
-    "description": "Sends downloads from specific file hosting websites to the Ascendara Download Manager.",
+    "version": "2.2",
+    "description": "Redirects downloads from specific file hosting websites to the Ascendara Download Manager for better download handling and management.",
     "browser_specific_settings": {
         "gecko": {
             "id": "ascendara-download-blocker@ascendara.app",
