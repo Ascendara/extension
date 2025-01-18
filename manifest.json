@@ -4,8 +4,9 @@
   "version": "2.2",
   "description": "Redirects downloads from specific file hosting websites to the Ascendara Download Manager for faster downlaoding.",
   "permissions": [
-      "downloads",
-      "storage"
+    "downloads",
+    "storage",
+    "tabs"
   ],
   "host_permissions": [
       "*://*.megadb.xyz/*",

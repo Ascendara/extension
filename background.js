@@ -1,5 +1,9 @@
 // Use the appropriate browser API
-const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
+const browserAPI = (typeof browser !== 'undefined' && browser !== null) ? browser : (typeof chrome !== 'undefined' ? chrome : null);
+if (!browserAPI) {
+    console.error('No browser API found');
+    throw new Error('Browser API not supported');
+}
 
 // Default blocked domains
 const defaultBlockedDomains = [
@@ -52,37 +56,42 @@ async function handleDownload(downloadItem, suggest) {
     const blockedDomains = data.blockedDomains || defaultBlockedDomains;
     
     if (isEnabled && isDomainBlocked(domain, blockedDomains)) {
-      try {
-        // Cancel the download by suggesting an empty filename
-        if (suggest) {
-          // Firefox requires a non-empty filename, so we'll use a temporary one
-          const isFirefox = browserAPI === browser;
-          suggest({ 
-            filename: isFirefox ? 'cancelled.tmp' : '', 
-            conflictAction: 'uniquify' 
-          });
-        } else {
-          await browserAPI.downloads.cancel(downloadItem.id);
+        try {
+            if (suggest) {
+                suggest({ 
+                    filename: 'cancelled.tmp', 
+                    conflictAction: 'uniquify' 
+                });
+                // Don't call suggest again after this point
+                suggest = null;
+            } else {
+                await browserAPI.downloads.cancel(downloadItem.id);
+            }
+            
+            // Clean up any existing download
+            if (downloadItem.id) {
+                await browserAPI.downloads.erase({ id: downloadItem.id });
+            }
+            
+            // Create and immediately close a tab to trigger the protocol
+            // Replace the tab creation with:
+            console.log('ascendara://' + encodeURIComponent(url));
+
+            // Replace the tab creation code with:
+            browserAPI.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+                if (tabs[0]) {
+                    browserAPI.tabs.update(tabs[0].id, {
+                        url: 'ascendara://' + encodeURIComponent(url)
+                    });
+                }
+            });
+        } catch (error) {
+            console.error('Error handling download:', error);
+            // Only call suggest if we haven't already
+            if (suggest) suggest();
         }
-        
-        // Clean up any existing download
-        if (downloadItem.id) {
-          await browserAPI.downloads.erase({ id: downloadItem.id });
-        }
-        
-        // Redirect to Ascendara
-        const tabs = await browserAPI.tabs.query({ active: true, currentWindow: true });
-        if (tabs && tabs.length > 0) {
-          await browserAPI.tabs.update(tabs[0].id, {
-            url: 'ascendara://' + url
-          });
-        }
-      } catch (error) {
-        console.error('Error handling download:', error);
-        if (suggest) suggest();
-      }
     } else if (suggest) {
-      suggest();
+        suggest();
     }
   } catch (error) {
     console.error('Error getting storage:', error);
@@ -95,6 +104,3 @@ browserAPI.downloads.onDeterminingFilename.addListener((downloadItem, suggest) =
   handleDownload(downloadItem, suggest);
   return true; // Keep the suggest callback valid
 });
-
-// Also listen for download state changes to catch any that slip through
-browserAPI.downloads.onCreated.addListener(handleDownload);
