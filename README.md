@@ -1,39 +1,82 @@
 <div align="center">
-    </a>
-    <br />
-    <img align="center" width="128" height="128" src="/readme/ascendara.png">
-    <br />
-    <br />
-    
-    
-   ![GitHub last commit](https://img.shields.io/github/last-commit/t-a-g-o/ascendaradownloadhandler)
-   ![GitHub issues](https://img.shields.io/github/issues-raw/t-a-g-o/ascendaradownloadhandler)
-   ![GitHub](https://img.shields.io/github/license/t-a-g-o/ascendaradownloadhandler)
-    
+    <img align="center" width="128" height="128" src="/readme/ascendara.png" alt="Ascendara Logo">
+    <h1>Download Handler Extension</h1>
+    <p>
+        <img src="https://img.shields.io/github/last-commit/t-a-g-o/ascendaradownloadhandler" alt="Last Commit">
+        <img src="https://img.shields.io/github/issues-raw/t-a-g-o/ascendaradownloadhandler" alt="Issues">
+        <a href="https://ascendara.app/"><img src="https://img.shields.io/badge/website-ascendara.app-blue" alt="Website"></a>
+        <img src="https://img.shields.io/github/license/t-a-g-o/ascendaradownloadhandler" alt="License">
+    </p>
 </div>
 
-> The Ascendara Download Handler is a browser extension that sends downloads from known (or added) provider straight to Ascendara. Download games 50% faster just by enabling the extension! Never worry about having to turn it off or on manually, the extension detects when a download starts and sends it to Ascendara.
+## 🔗 About
 
-## Download Ascendara right now! https://ascendara.app/
+A lightweight browser extension that enhances your Ascendara experience. When enabled, it automatically detects downloads from supported providers and sends them straight to Ascendara - making downloads up to 50% faster! No manual intervention needed.
 
-# How to install the extension
-This is a step by step on how to download and load the extension in developer mode. I recommend that you add it to your browser [here]().
-1. Download the repo files by clicking on ```Code``` then ```Download ZIP```
-2. Unzip the files into a directory
-3. In your browser (I recommend [Arc](https://arc.net/download) to block all the ads and popups) go to the ```Manage Extensions``` tab
-4. Enable ```Developer mode```
-5. Click on ```Load Unpacked```
-6. Select the files you just downloaded
-7. Enable the extension
+## 🖼️ Preview
 
-# How to use the extension
-1. Once you installed the extension, enable it
-2. When a download starts you will get a prompt asking to open Ascendara
-3. Toggle the box that always opens the application
-4. Click on the button that says "open in Ascendara"
+### Download Latest Version
+🚀 [Get it from the Chrome Web Store](https://ascendara.app/)
 
-### Report any issues you find here or in the discord!
+<details>
+<summary>📸 Screenshots</summary>
 
-# Showcase
-![extensionDisabled](/readme/disabled.png)
-![extensionEnabled](/readme/enabled.png)
+### Extension Disabled
+![Extension Disabled](/readme/disabled.png)
+
+### Extension Enabled
+![Extension Enabled](/readme/enabled.png)
+
+</details>
+
+## 🛠️ Manual Installation
+
+### Prerequisites
+- A Chromium-based browser (Chrome, Arc, Edge, etc.)
+- Developer mode enabled in extensions
+
+### Quick Start
+
+1. **Download the Extension**
+   ```sh
+   git clone https://github.com/t-a-g-o/ascendaradownloadhandler.git
+   # Or download ZIP from the green 'Code' button
+   ```
+
+2. **Install in Browser**
+   - Open your browser's extension management page
+   - Enable "Developer mode"
+   - Click "Load Unpacked"
+   - Select the downloaded extension folder
+
+## 🎯 How to Use
+
+1. Install and enable the extension
+2. When a download starts, you'll get a prompt to open Ascendara
+3. Check "Always open in Ascendara" for future convenience
+4. Click "Open in Ascendara" to start your download
+
+> 💡 **Pro tip**: Use [Arc Browser](https://arc.net/download) for the best experience with built-in ad and popup blocking.
+
+## 📲 Support & Feedback
+
+Found a bug or have a suggestion? The community is here to help!
+- [Open an issue](https://github.com/t-a-g-o/ascendaradownloadhandler/issues)
+- [Join our Discord](https://ascendara.app/discord)
+
+## 📝 License & Contact  
+
+This project is part of the Ascendara ecosystem
+
+Licensed under [CC BY-NC 1.0 Universal](./LICENSE) - 2025 tagoWorks
+
+### Get in Touch
+- Email: [santiago@tago.works](mailto:santiago@tago.works)
+- Website: [tago.works](https://tago.works)
+- Discord: [Join our community](https://ascendara.app/discord)
+
+
+---
+<div align="center">
+    <sub>Built with 💖 by <a href="https://tago.works">tago</a></sub>
+</div>
