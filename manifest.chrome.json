@@ -1,12 +1,11 @@
 {
     "manifest_version": 3,
     "name": "Ascendara Download Handler",
-    "version": "2.3",
+    "version": "2.4",
     "description": "Sends downloads from known (or added) providers straight to Ascendara.",
     "permissions": [
       "downloads",
-      "storage",
-      "tabs"
+      "storage"
     ],
     "host_permissions": [
         "*://*.megadb.xyz/*",
