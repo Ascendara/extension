@@ -9,7 +9,7 @@ if (!browserAPI) {
 const defaultBlockedDomains = [
   'megadb.xyz',
   'datanodes.to',
-  'qiwi.gg',
+  'spyderrock.com',
   'buzzheavier.com'
 ];
 
@@ -56,42 +56,36 @@ async function handleDownload(downloadItem, suggest) {
     const blockedDomains = data.blockedDomains || defaultBlockedDomains;
     
     if (isEnabled && isDomainBlocked(domain, blockedDomains)) {
-        try {
-            if (suggest) {
-                suggest({ 
-                    filename: 'cancelled.tmp', 
-                    conflictAction: 'uniquify' 
-                });
-                // Don't call suggest again after this point
-                suggest = null;
-            } else {
-                await browserAPI.downloads.cancel(downloadItem.id);
-            }
-            
-            // Clean up any existing download
-            if (downloadItem.id) {
-                await browserAPI.downloads.erase({ id: downloadItem.id });
-            }
-            
-            // Create and immediately close a tab to trigger the protocol
-            // Replace the tab creation with:
-            console.log('ascendara://' + encodeURIComponent(url));
-
-            // Replace the tab creation code with:
-            browserAPI.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-                if (tabs[0]) {
-                    browserAPI.tabs.update(tabs[0].id, {
-                        url: 'ascendara://' + encodeURIComponent(url)
-                    });
-                }
-            });
-        } catch (error) {
-            console.error('Error handling download:', error);
-            // Only call suggest if we haven't already
-            if (suggest) suggest();
+      try {
+        if (suggest) {
+          suggest({ 
+            filename: 'cancelled.tmp', 
+            conflictAction: 'uniquify' 
+          });
+        } else {
+          // Firefox path
+          await browserAPI.downloads.cancel(downloadItem.id);
         }
+        
+        // Clean up any existing download
+        if (downloadItem.id) {
+          await browserAPI.downloads.erase({ id: downloadItem.id });
+        }
+        
+        // Handle the Ascendara protocol
+        browserAPI.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+          if (tabs[0]) {
+            browserAPI.tabs.update(tabs[0].id, {
+              url: 'ascendara://' + encodeURIComponent(url)
+            });
+          }
+        });
+      } catch (error) {
+        console.error('Error handling download:', error);
+        if (suggest) suggest();
+      }
     } else if (suggest) {
-        suggest();
+      suggest();
     }
   } catch (error) {
     console.error('Error getting storage:', error);
@@ -99,8 +93,16 @@ async function handleDownload(downloadItem, suggest) {
   }
 }
 
-// Set up download listeners
-browserAPI.downloads.onDeterminingFilename.addListener((downloadItem, suggest) => {
-  handleDownload(downloadItem, suggest);
-  return true; // Keep the suggest callback valid
-});
+// Set up download listeners based on browser
+if (typeof browser !== 'undefined') {
+  // Firefox
+  browserAPI.downloads.onCreated.addListener(async (downloadItem) => {
+    await handleDownload(downloadItem);
+  });
+} else {
+  // Chrome
+  browserAPI.downloads.onDeterminingFilename.addListener((downloadItem, suggest) => {
+    handleDownload(downloadItem, suggest);
+    return true; // Keep the suggest callback valid
+  });
+}
