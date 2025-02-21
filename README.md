@@ -2,10 +2,10 @@
     <img align="center" width="128" height="128" src="/readme/ascendara.png" alt="Ascendara Logo">
     <h1>Download Handler Extension</h1>
     <p>
-        <img src="https://img.shields.io/github/last-commit/t-a-g-o/ascendaradownloadhandler" alt="Last Commit">
-        <img src="https://img.shields.io/github/issues-raw/t-a-g-o/ascendaradownloadhandler" alt="Issues">
+        <img src="https://img.shields.io/github/last-commit/ascendara/ascendaradownloadhandler" alt="Last Commit">
+        <img src="https://img.shields.io/github/issues-raw/ascendara/ascendaradownloadhandler" alt="Issues">
         <a href="https://ascendara.app/"><img src="https://img.shields.io/badge/website-ascendara.app-blue" alt="Website"></a>
-        <img src="https://img.shields.io/github/license/t-a-g-o/ascendaradownloadhandler" alt="License">
+        <img src="https://img.shields.io/github/license/ascendara/ascendaradownloadhandler" alt="License">
     </p>
 </div>
 
@@ -39,7 +39,7 @@ A lightweight browser extension that enhances your Ascendara experience. When en
 
 1. **Download the Extension**
    ```sh
-   git clone https://github.com/t-a-g-o/ascendaradownloadhandler.git
+   git clone https://github.com/ascendara/ascendaradownloadhandler.git
    # Or download ZIP from the green 'Code' button
    ```
 
@@ -61,7 +61,7 @@ A lightweight browser extension that enhances your Ascendara experience. When en
 ## 📲 Support & Feedback
 
 Found a bug or have a suggestion? The community is here to help!
-- [Open an issue](https://github.com/t-a-g-o/ascendaradownloadhandler/issues)
+- [Open an issue](https://github.com/ascendara/ascendaradownloadhandler/issues)
 - [Join our Discord](https://ascendara.app/discord)
 
 ## 📝 License & Contact  
