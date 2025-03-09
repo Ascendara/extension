@@ -15,8 +15,8 @@ A lightweight browser extension that enhances your Ascendara experience. When en
 
 ## 🖼️ Preview
 
-### Download Latest Version
-🚀 [Get it from the Chrome Web Store](https://ascendara.app/)
+### Download Latest Version (Chrome & Firefox Supported)
+🚀 [Get it for your browser](https://ascendara.app/extension)
 
 <details>
 <summary>📸 Screenshots</summary>
