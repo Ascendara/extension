@@ -3,7 +3,7 @@ import { browserAPI } from './utils.js';
 // Default blocked domains
 const defaultBlockedDomains = [
   'megadb.xyz',
-  'datanodes.to',
+  'dlproxy.site',
   'qiwi.gg',
   'buzzheavier.com'
 ];
