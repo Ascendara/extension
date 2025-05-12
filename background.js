@@ -5,19 +5,42 @@ if (!browserAPI) {
     throw new Error('Browser API not supported');
 }
 
-// Default blocked domains
+// Default blocked domains (fallback)
 const defaultBlockedDomains = [
   'megadb.xyz',
   'datanodes.to',
   'spyderrock.com',
-  'buzzheavier.com'
+  'flashbang.sh'
 ];
 
+// Fetch blocked domains from API
+async function fetchBlockedDomains() {
+  try {
+    const response = await fetch('https://api.ascendara.app/app/json/providers');
+    if (!response.ok) throw new Error('Network response was not ok');
+    const data = await response.json();
+    if (data && data.forwardingLinks) {
+      // Extract hostnames from the forwardingLinks values
+      return Object.values(data.forwardingLinks).map(url => {
+        try {
+          return new URL(url.replace(/\\\//g, '/')).hostname;
+        } catch (e) {
+          return null;
+        }
+      }).filter(Boolean);
+    }
+  } catch (e) {
+    console.error('Failed to fetch blocked domains:', e);
+  }
+  return defaultBlockedDomains;
+}
+
 // Initialize the extension
-browserAPI.runtime.onInstalled.addListener(() => {
+browserAPI.runtime.onInstalled.addListener(async () => {
+  const blockedDomains = await fetchBlockedDomains();
   browserAPI.storage.sync.set({
     isEnabled: true,
-    blockedDomains: defaultBlockedDomains
+    blockedDomains
   });
 });
 
