@@ -15,7 +15,11 @@
         "*://*.megadb.xyz/*",
         "*://*.dlproxy.site/*",
         "*://*.qiwi.gg/*",
-        "*://*.buzzheavier.com/*"
+        "*://*.buzzheavier.com/*",
+        "*://*.datanodes.to/*",
+        "*://*.spyderrock.com/*",
+        "*://*.flashbang.sh/*",
+        "*://*.gofile.io/*"
     ],
     "icons": {
         "16": "icons/ascendara-16.png",

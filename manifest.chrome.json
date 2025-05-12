@@ -9,6 +9,10 @@
     ],
     "host_permissions": [
         "*://*.megadb.xyz/*",
+        "*://*.datanodes.to/*",
+        "*://*.spyderrock.com/*",
+        "*://*.flashbang.sh/*",
+        "*://*.gofile.io/*",
         "*://*.dlproxy.site/*",
         "*://*.qiwi.gg/*",
         "*://*.buzzheavier.com/*"
