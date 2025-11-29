@@ -19,7 +19,8 @@
         "*://*.datanodes.to/*",
         "*://*.spyderrock.com/*",
         "*://*.flashbang.sh/*",
-        "*://*.gofile.io/*"
+        "*://*.gofile.io/*",
+        "*://*.steamrip.com/*"
     ],
     "icons": {
         "16": "icons/ascendara-16.png",

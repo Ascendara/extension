@@ -15,7 +15,8 @@
         "*://*.gofile.io/*",
         "*://*.dlproxy.site/*",
         "*://*.qiwi.gg/*",
-        "*://*.buzzheavier.com/*"
+        "*://*.buzzheavier.com/*",
+        "*://*.steamrip.com/*"
     ],
     "icons": {
         "16": "icons/ascendara-16.png",

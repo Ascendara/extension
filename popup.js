@@ -2,10 +2,12 @@ import { browserAPI } from './utils.js';
 
 // Default blocked domains
 const defaultBlockedDomains = [
+  'flashbang.sh',
+  'dlproxy.uk',
+  'gofile.io',
   'megadb.xyz',
-  'dlproxy.site',
-  'qiwi.gg',
-  'buzzheavier.com'
+  'pixeldrain.com',
+  'spyderrock.com'
 ];
 
 // Wait for DOM to be fully loaded

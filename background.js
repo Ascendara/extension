@@ -7,10 +7,12 @@ if (!browserAPI) {
 
 // Default blocked domains (fallback)
 const defaultBlockedDomains = [
+  'flashbang.sh',
+  'dlproxy.uk',
+  'gofile.io',
   'megadb.xyz',
-  'datanodes.to',
-  'spyderrock.com',
-  'flashbang.sh'
+  'pixeldrain.com',
+  'spyderrock.com'
 ];
 
 // Fetch blocked domains from API
