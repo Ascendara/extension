@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SteamRip Cookie Detected</title>
+  <style>
+    :root {
+      --primary: #7E57C2;
+      --primary-glow: #B388FF;
+      --surface: #1E1E1E;
+      --background: #121212;
+      --text: #FFFFFF;
+      --text-secondary: rgba(255, 255, 255, 0.7);
+      --success: #4CAF50;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      width: 320px;
+      min-height: 280px;
+      background: radial-gradient(circle at center, #1a1a1a, var(--background));
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .icon-wrapper {
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    .icon-circle {
+      width: 80px;
+      height: 80px;
+      background: var(--primary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 30px rgba(126, 87, 194, 0.4);
+      animation: pulse 2s ease-out infinite;
+    }
+
+    .icon-circle svg {
+      width: 40px;
+      height: 40px;
+      fill: none;
+      stroke: var(--text);
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 20px rgba(126, 87, 194, 0.4);
+      }
+      50% {
+        box-shadow: 0 0 40px rgba(126, 87, 194, 0.6);
+      }
+      100% {
+        box-shadow: 0 0 20px rgba(126, 87, 194, 0.4);
+      }
+    }
+
+    h1 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+      line-height: 1.4;
+    }
+
+    .cookie-preview {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 20px;
+      width: 100%;
+      max-height: 60px;
+      overflow: hidden;
+    }
+
+    .cookie-preview code {
+      font-size: 11px;
+      color: var(--text-secondary);
+      word-break: break-all;
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 12px;
+      width: 100%;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: none;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: var(--text);
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-glow);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-secondary);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text);
+    }
+
+    .status-message {
+      margin-top: 16px;
+      font-size: 13px;
+      color: var(--success);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .status-message.show {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon-wrapper">
+      <div class="icon-circle">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/>
+          <path d="M12 6a1 1 0 0 0-1 1v5a1 1 0 0 0 .29.71l3 3a1 1 0 0 0 1.42-1.42L13 11.59V7a1 1 0 0 0-1-1z"/>
+        </svg>
+      </div>
+    </div>
+    
+    <h1>Almost there!</h1>
+    <p class="subtitle">The cookie from SteamRip was found. Send it to Ascendara to rescrape.</p>
+    
+    <div class="button-group">
+      <button class="btn btn-secondary" id="cancelBtn">Cancel</button>
+      <button class="btn btn-primary" id="sendBtn">Send to Ascendara</button>
+    </div>
+    
+    <p class="status-message" id="statusMessage">✓ Cookie sent successfully!</p>
+  </div>
+
+  <script src="cookie-popup.js"></script>
+</body>
+</html>

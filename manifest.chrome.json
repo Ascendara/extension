@@ -5,8 +5,15 @@
     "description": "Sends downloads from known (or added) providers straight to Ascendara.",
     "permissions": [
       "downloads",
-      "storage"
+      "storage",
+      "cookies",
+      "tabs",
+      "webRequest"
     ],
+    "web_accessible_resources": [{
+      "resources": ["cookie-popup.html"],
+      "matches": ["<all_urls>"]
+    }],
     "host_permissions": [
         "*://*.megadb.xyz/*",
         "*://*.datanodes.to/*",
