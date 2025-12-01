@@ -8,7 +8,7 @@
             "id": "ascendara-download-blocker@ascendara.app",
             "strict_min_version": "58.0",
             "data_collection_permissions": {
-                "required": false
+                "required": []
             }
         }
     },
