@@ -112,6 +112,10 @@ function resetPopupFlag() {
 }
 
 // Use webRequest to intercept the actual Cookie header from requests
+// Firefox doesn't support 'extraHeaders' option, so we conditionally include it
+const isFirefox = typeof browser !== 'undefined' && browser !== null;
+const sendHeadersOptions = isFirefox ? ['requestHeaders'] : ['requestHeaders', 'extraHeaders'];
+
 browserAPI.webRequest.onSendHeaders.addListener(
   (details) => {
     // Only process if we haven't shown popup yet and it's the API endpoint
@@ -135,7 +139,7 @@ browserAPI.webRequest.onSendHeaders.addListener(
     }
   },
   { urls: ['*://*.steamrip.com/*'] },
-  ['requestHeaders', 'extraHeaders']
+  sendHeadersOptions
 );
 
 // Listen for completed responses to verify the request succeeded (not a Cloudflare challenge)
