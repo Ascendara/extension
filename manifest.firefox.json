@@ -1,7 +1,7 @@
 {
     "manifest_version": 2,
     "name": "Ascendara Download Handler",
-    "version": "3.8",
+    "version": "3.9",
     "description": "Sends downloads from known (or added) providers straight to Ascendara.",
     "browser_specific_settings": {
         "gecko": {
