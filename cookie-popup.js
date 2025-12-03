@@ -1,4 +1,5 @@
 const browserAPI = (typeof browser !== 'undefined' && browser !== null) ? browser : chrome;
+const isFirefox = typeof browser !== 'undefined' && browser !== null;
 
 // Close the steamrip tab that triggered this popup
 async function closeSteamripTab() {
@@ -8,13 +9,60 @@ async function closeSteamripTab() {
   }
 }
 
+// Base64 encode for safer URL transport (handles special chars better in Firefox/Opera)
+function base64Encode(str) {
+  try {
+    // Use TextEncoder for proper UTF-8 encoding to base64
+    const encoder = new TextEncoder();
+    const data = encoder.encode(str);
+    let binary = '';
+    for (let i = 0; i < data.length; i++) {
+      binary += String.fromCharCode(data[i]);
+    }
+    return btoa(binary);
+  } catch (e) {
+    console.error('Base64 encode error:', e);
+    return null;
+  }
+}
+
 // Send cookie to Ascendara
 document.getElementById('sendBtn').addEventListener('click', async () => {
-  const data = await browserAPI.storage.local.get('steamripCfClearance');
+  const data = await browserAPI.storage.local.get(['steamripCfClearance', 'steamripUserAgent']);
   const cookieValue = data.steamripCfClearance;
+  const userAgent = data.steamripUserAgent || navigator.userAgent;
   
   if (cookieValue) {
-    const protocolUrl = 'ascendara://steamrip-cookie/' + encodeURIComponent(cookieValue);
+    console.log('Original cookie length:', cookieValue.length);
+    console.log('Original cookie:', cookieValue);
+    console.log('User-Agent:', userAgent);
+    
+    // For Firefox/Opera, use base64 encoding to avoid URL corruption issues
+    // Chrome handles the raw URL fine, but other browsers may truncate/corrupt long protocol URLs
+    // We now send both cookie and user-agent as a JSON object
+    let protocolUrl;
+    if (isFirefox) {
+      // Create a JSON payload with both cookie and user-agent
+      const payload = JSON.stringify({
+        cookie: cookieValue,
+        userAgent: userAgent
+      });
+      const encoded = base64Encode(payload);
+      console.log('Base64 encoded payload:', encoded);
+      console.log('Base64 encoded length:', encoded ? encoded.length : 0);
+      // Use b64: prefix to indicate base64 encoding to Ascendara
+      protocolUrl = 'ascendara://steamrip-cookie/b64:' + encoded;
+    } else {
+      // Chrome: also send user-agent but URL encoded
+      const payload = JSON.stringify({
+        cookie: cookieValue,
+        userAgent: userAgent
+      });
+      protocolUrl = 'ascendara://steamrip-cookie/' + encodeURIComponent(payload);
+    }
+    
+    console.log('Protocol URL length:', protocolUrl.length);
+    console.log('Protocol URL:', protocolUrl);
     
     // Use the same method as download handler - create a new tab with the protocol
     browserAPI.tabs.create({ url: protocolUrl }, async () => {

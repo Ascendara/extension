@@ -10,7 +10,18 @@ const STEAMRIP_API_URL = 'https://steamrip.com/wp-json/wp/v2/posts?per_page=1&pa
 // Function to get cf_clearance cookie from steamrip.com
 async function getSteamripCfClearance() {
   try {
-    // Try getting all cookies for the domain first
+    // Try with specific URL first (most reliable for Firefox)
+    const cookie = await browserAPI.cookies.get({
+      url: 'https://steamrip.com/',
+      name: 'cf_clearance'
+    });
+    
+    if (cookie) {
+      console.log('cf_clearance cookie found via URL method:', cookie.value);
+      return cookie.value;
+    }
+    
+    // Try getting all cookies for the domain
     const allCookies = await browserAPI.cookies.getAll({
       domain: 'steamrip.com'
     });
@@ -22,24 +33,24 @@ async function getSteamripCfClearance() {
     });
     console.log('All cookies for .steamrip.com:', dotDomainCookies);
     
-    // Combine and find cf_clearance
-    const allFound = [...allCookies, ...dotDomainCookies];
-    const cfCookie = allFound.find(c => c.name === 'cf_clearance');
-    
-    if (cfCookie) {
-      console.log('cf_clearance cookie found:', cfCookie.value);
-      return cfCookie.value;
-    }
-    
-    // Try with specific URL as fallback
-    const cookie = await browserAPI.cookies.get({
-      url: 'https://steamrip.com/wp-json/wp/v2/posts',
-      name: 'cf_clearance'
+    // Also try without domain filter and filter manually
+    const allSiteCookies = await browserAPI.cookies.getAll({
+      url: 'https://steamrip.com/'
     });
+    console.log('All cookies via URL filter:', allSiteCookies);
     
-    if (cookie) {
-      console.log('cf_clearance cookie found via URL:', cookie.value);
-      return cookie.value;
+    // Combine all and find cf_clearance
+    const allFound = [...allCookies, ...dotDomainCookies, ...allSiteCookies];
+    const cfCookies = allFound.filter(c => c.name === 'cf_clearance');
+    console.log('All cf_clearance cookies found:', cfCookies);
+    
+    if (cfCookies.length > 0) {
+      // If multiple, prefer the one with longest value or most recent
+      const best = cfCookies.reduce((a, b) => 
+        (b.value.length > a.value.length) ? b : a
+      );
+      console.log('Using cf_clearance cookie:', best.value);
+      return best.value;
     }
     
     console.log('cf_clearance cookie not found in any method');
@@ -144,7 +155,7 @@ browserAPI.webRequest.onSendHeaders.addListener(
 
 // Listen for completed responses to verify the request succeeded (not a Cloudflare challenge)
 browserAPI.webRequest.onCompleted.addListener(
-  (details) => {
+  async (details) => {
     if (cookiePopupShown) return;
     if (!details.url.includes('steamrip.com/wp-json/wp/v2/posts')) return;
     if (!pendingCfClearance) return;
@@ -158,9 +169,46 @@ browserAPI.webRequest.onCompleted.addListener(
       // Mark as shown to prevent duplicates
       cookiePopupShown = true;
       
-      // Store it and open popup
-      browserAPI.storage.local.set({ steamripCfClearance: pendingCfClearance }).then(() => {
-        console.log('Cookie stored, opening popup...');
+      // On Firefox, re-fetch the cookie directly from the cookies API to ensure we have the correct value
+      // The webRequest header might have a stale or different cookie
+      let finalCookie = pendingCfClearance;
+      if (isFirefox) {
+        try {
+          console.log('Firefox: Intercepted cookie from request header:', pendingCfClearance);
+          const freshCookie = await getSteamripCfClearance();
+          console.log('Firefox: Fresh cookie from cookies API:', freshCookie);
+          if (freshCookie) {
+            finalCookie = 'cf_clearance=' + freshCookie;
+            console.log('Firefox: Using fresh cookie:', finalCookie);
+            // Compare to see if they differ
+            if (pendingCfClearance !== finalCookie) {
+              console.log('Firefox: Cookie values DIFFER - intercepted vs API');
+              console.log('  Intercepted:', pendingCfClearance.substring(0, 80));
+              console.log('  API cookie:', finalCookie.substring(0, 80));
+            }
+          } else {
+            console.log('Firefox: Could not get fresh cookie, using intercepted value');
+          }
+        } catch (e) {
+          console.error('Firefox: Error fetching fresh cookie:', e);
+        }
+      }
+      
+      console.log('Final cookie to store (first 100 chars):', finalCookie.substring(0, 100));
+      
+      // Capture the User-Agent for Cloudflare validation
+      // The cookie is tied to the User-Agent that was used when it was issued
+      const userAgent = navigator.userAgent;
+      console.log('Captured User-Agent:', userAgent);
+      
+      // Store both cookie and user-agent
+      browserAPI.storage.local.set({ 
+        steamripCfClearance: finalCookie,
+        steamripUserAgent: userAgent
+      }).then(() => {
+        console.log('Cookie stored:', finalCookie);
+        console.log('User-Agent stored:', userAgent);
+        console.log('Opening popup...');
         openCookiePopup();
         // Reset flag after 30 seconds so user can retry
         resetPopupFlag();
