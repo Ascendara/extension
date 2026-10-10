@@ -35,6 +35,12 @@ A lightweight browser extension that enhances your Ascendara experience. When en
 - A Chromium-based browser (Chrome, Arc, Edge, etc.)
 - Developer mode enabled in extensions
 
+### Browser manifests
+
+- **Chrome / Edge / Chromium:** load this repository folder directly. The default `manifest.json` is Manifest V3 and matches `manifest.chrome.json`. Do not replace it with the Firefox manifest.
+- **Firefox:** make a separate copy of the extension folder and copy `manifest.firefox.json` over `manifest.json` in that copy. Load that copy through `about:debugging`. Keep the Chrome folder unchanged.
+- If Chrome displays version **4.2** or `manifest_version: 2`, it is loading an older copy or the Firefox manifest. Remove that entry and use **Load unpacked** to select this updated folder. The current extension version is **5.0**.
+
 ### Quick Start
 
 1. **Download the Extension**
@@ -80,3 +86,12 @@ Licensed under [MIT](./LICENSE) - 2026 tagoWorks
 <div align="center">
     <sub>Built with 💖 by <a href="https://tago.works">tago</a></sub>
 </div>
+
+
+## Downloads from any website (v5)
+
+Open a game in Ascendara, then start the file download in your browser. The extension guesses the game name from the page URL (for example, `/game/rest-area-simulator`) or its matching tab title and sends that suggestion to Ascendara. Ascendara autofills the name and lets you edit it before continuing. For a game outside the index, send the download from any page and enter its name. Requires an Ascendara build with the v5 download handoff.
+
+When enabled, the extension forwards every HTTP(S) file download to Ascendara, regardless of website or provider. The setting stays on until you turn it off. Turn it off to keep downloads in your browser.
+
+The browser download is canceled immediately and its canceled entry is cleared before requesting that the OS open Ascendara. This does not confirm that the app accepted the download: approve the browser's external-app prompt and review it in Ascendara. The popup retains the last link for retry, and canceled downloads remain in browser history. Only the latest capture is retained locally; it can contain a temporary signed URL. Browser cookies are not included in download handoffs. Session-bound links, blob URLs, and providers without transferable direct links cannot be downloaded this way. Existing SteamRIP cookie setup remains separate.

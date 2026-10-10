@@ -1,56 +1,62 @@
 {
-    "manifest_version": 2,
-    "name": "Ascendara Download Handler",
-    "version": "4.2",
-    "description": "Sends downloads from known (or added) providers straight to Ascendara.",
-    "browser_specific_settings": {
-        "gecko": {
-            "id": "ascendara-download-blocker@ascendara.app",
-            "strict_min_version": "140.0",
-            "data_collection_permissions": {
-                "required": ["none"]
-            }
-        }
-    },
-    "permissions": [
-        "downloads",
-        "storage",
-        "cookies",
-        "tabs",
-        "webRequest",
-        "*://*.megadb.xyz/*",
-        "*://*.dlproxy.site/*",
-        "*://tunnel1.dlproxy.uk/*",
-        "*://*.qiwi.gg/*",
-        "*://*.buzzheavier.com/*",
-        "*://*.bzzhr.to/*",
-        "*://*.fafda.to/*",
-        "*://*.datanodes.to",
-        "*://*.spyderrock.com/*",
-        "*://*.flashbang.sh/*",
-        "*://*.gofile.io/*",
-        "*://*.pixeldrain.com/*",
-        "*://*.vikingfile.com/*",
-        "*://*.r2.cloudflarestorage.com/*",
-        "*://*.steamrip.com/*",
-        "*://steamrip.com/*"
-    ],
-    "web_accessible_resources": ["cookie-popup.html"],
-    "icons": {
-        "16": "icons/ascendara-16.png",
-        "32": "icons/ascendara-32.png",
-        "48": "icons/ascendara-48.png",
-        "128": "icons/ascendara-128.png"
-    },
-    "background": {
-        "scripts": ["background.js"]
-    },
-    "browser_action": {
-        "default_popup": "popup.html",
-        "default_icon": {
-            "16": "icons/ascendara-16.png",
-            "48": "icons/ascendara-48.png",
-            "128": "icons/ascendara-128.png"
-        }
+  "manifest_version": 2,
+  "name": "Ascendara Download Handler",
+  "version": "5.0",
+  "description": "Send direct downloads from any website to Ascendara, including games outside your index.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "ascendara-download-blocker@ascendara.app",
+      "strict_min_version": "140.0",
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      }
     }
+  },
+  "permissions": [
+    "downloads",
+    "storage",
+    "cookies",
+    "tabs",
+    "webRequest",
+    "*://*.megadb.xyz/*",
+    "*://*.dlproxy.site/*",
+    "*://tunnel1.dlproxy.uk/*",
+    "*://*.qiwi.gg/*",
+    "*://*.buzzheavier.com/*",
+    "*://*.bzzhr.to/*",
+    "*://*.fafda.to/*",
+    "*://*.datanodes.to/*",
+    "*://*.spyderrock.com/*",
+    "*://*.flashbang.sh/*",
+    "*://*.gofile.io/*",
+    "*://*.pixeldrain.com/*",
+    "*://*.vikingfile.com/*",
+    "*://*.r2.cloudflarestorage.com/*",
+    "*://*.steamrip.com/*",
+    "*://steamrip.com/*"
+  ],
+  "web_accessible_resources": [
+    "cookie-popup.html"
+  ],
+  "icons": {
+    "16": "icons/ascendara-16.png",
+    "32": "icons/ascendara-32.png",
+    "48": "icons/ascendara-48.png",
+    "128": "icons/ascendara-128.png"
+  },
+  "background": {
+    "scripts": [
+      "background.js"
+    ]
+  },
+  "browser_action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/ascendara-16.png",
+      "48": "icons/ascendara-48.png",
+      "128": "icons/ascendara-128.png"
+    }
+  }
 }

@@ -269,137 +269,137 @@ browserAPI.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   }
 });
 
-// Default blocked domains (fallback)
-const defaultBlockedDomains = [
-  'flashbang.sh',
-  'dlproxy.uk',
-  'gofile.io',
-  'megadb.xyz',
-  'pixeldrain.com',
-  'spyderrock.com',
-  'bzzhr.to',
-  'fafda.to'
-];
-
-// Fetch blocked domains from API
-async function fetchBlockedDomains() {
-  try {
-    const response = await fetch('https://api.ascendara.app/app/json/providers');
-    if (!response.ok) throw new Error('Network response was not ok');
-    const data = await response.json();
-    if (data && data.forwardingLinks) {
-      // Extract hostnames from the forwardingLinks values
-      const apiDomains = Object.values(data.forwardingLinks).map(url => {
-        try {
-          return new URL(url.replace(/\\\//g, '/')).hostname;
-        } catch (e) {
-          return null;
-        }
-      }).filter(Boolean);
-      // Always merge with hardcoded defaults so they are never dropped by API
-      return [...new Set([...defaultBlockedDomains, ...apiDomains])];
-    }
-  } catch (e) {
-    console.error('Failed to fetch blocked domains:', e);
-  }
-  return defaultBlockedDomains;
-}
-
-// Initialize the extension
+// The main toggle controls downloads from every HTTP(S) site.
 browserAPI.runtime.onInstalled.addListener(async () => {
-  const blockedDomains = await fetchBlockedDomains();
-  browserAPI.storage.sync.set({
-    isEnabled: true,
-    blockedDomains
-  });
+  const data = await browserAPI.storage.sync.get(['isEnabled']);
+  if (data.isEnabled === undefined) {
+    await browserAPI.storage.sync.set({ isEnabled: true });
+  }
+  // Remove preferences from older versions; they no longer restrict capture.
+  await browserAPI.storage.sync.remove(['captureMode', 'blockedDomains']);
+  await browserAPI.storage.local.remove('captureNextUntil');
 });
 
-// Function to extract domain from URL
-function extractDomain(url) {
+function gameNameFromPage(pageUrl) {
   try {
-    const urlObj = new URL(url);
-    return urlObj.hostname.toLowerCase().replace(/^www\./, '');
-  } catch (e) {
-    console.error('Invalid URL:', url);
-    return '';
+    const page = new URL(pageUrl);
+    if (!['http:', 'https:'].includes(page.protocol)) return '';
+    const match = page.pathname.match(/^\/game\/([^/]+)/i);
+    if (!match) return '';
+    return decodeURIComponent(match[1])
+      .replace(/\.[a-z0-9]{1,5}$/i, '')
+      .replace(/[-_]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 200)
+      .replace(/\b[a-z]/g, letter => letter.toUpperCase());
+  } catch { return ''; }
+}
+
+async function findGamePage(item) {
+  let tabs = [];
+  try { tabs = await browserAPI.tabs.query({}); }
+  catch (error) { console.warn('Could not read browser tabs:', error); }
+  const detailsForTab = tab => {
+    const pageUrl = /^https?:\/\//i.test(tab?.url || '') ? tab.url : '';
+    const fromUrl = gameNameFromPage(pageUrl);
+    if (fromUrl) return { title: fromUrl, pageUrl };
+    let tabTitle = typeof tab?.title === 'string'
+      ? tab.title.split(/\s+(?:[|\u2013\u2014]|-)\s+/)[0].trim()
+      : '';
+    const providerName = pageUrl
+      ? new URL(pageUrl).hostname.split('.').slice(-2, -1)[0]
+      : '';
+    if (providerName) tabTitle = tabTitle.replace(new RegExp(providerName, 'ig'), ' ');
+    tabTitle = tabTitle.replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim();
+    if (tabTitle && !/^(download|downloads)$/i.test(tabTitle)) {
+      return { title: tabTitle.slice(0, 200), pageUrl };
+    }
+    return null;
+  };
+  // DownloadItem.tabId points to the tab that initiated this download, even
+  // when the file URL is on a CDN and the browser's active tab has changed.
+  const sourceTab = Number.isInteger(item.tabId) && item.tabId >= 0
+    ? tabs.find(tab => tab.id === item.tabId)
+    : null;
+  const sourceDetails = sourceTab && detailsForTab(sourceTab);
+  if (sourceDetails) return sourceDetails;
+
+  const referrer = item.referrer || '';
+  const referrerTab = tabs.find(tab => tab.url === referrer);
+  const referrerGuess = gameNameFromPage(referrer);
+  if (referrerGuess) return { title: referrerGuess, pageUrl: referrer };
+  const referrerDetails = referrerTab && detailsForTab(referrerTab);
+  if (referrerDetails) return referrerDetails;
+
+  // A CDN can replace the referrer. Use only an active game page, not any
+  // unrelated tab that happens to be open in the browser.
+  const activeGame = tabs.find(tab => tab.active && gameNameFromPage(tab.url));
+  if (activeGame) {
+    return { title: gameNameFromPage(activeGame.url), pageUrl: activeGame.url };
   }
+  return { title: '', pageUrl: '' };
+}
+let captureEnabled = true;
+void browserAPI.storage.sync.get(['isEnabled']).then(prefs => {
+  captureEnabled = prefs.isEnabled ?? true;
+}).catch(error => console.warn('Could not read download setting:', error));
+browserAPI.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName === 'sync' && changes.isEnabled) {
+    captureEnabled = changes.isEnabled.newValue ?? true;
+  }
+});
+
+function isCapturableDownload(item) {
+  const url = item.finalUrl || item.url || '';
+  return /^https?:\/\//i.test(url) && item.byExtensionId !== browserAPI.runtime.id;
 }
 
-// Function to check if a domain matches any blocked domain
-function isDomainBlocked(domain, blockedDomains) {
-  return blockedDomains.some(blockedDomain => 
-    domain === blockedDomain || domain.endsWith('.' + blockedDomain)
-  );
-}
-
-// Function to handle sending download to Ascendara
-async function handleDownload(downloadItem, suggest) {
-  let url = downloadItem.finalUrl || downloadItem.url;
-  if (!url) {
-    console.error("Failed to get download URL");
-    if (suggest) suggest();
+async function handleDownload(item) {
+  const url = item.finalUrl || item.url;
+  if (!isCapturableDownload(item)) return;
+  // Cancel immediately in onCreated, before any asynchronous storage or tab work.
+  try {
+    await browserAPI.downloads.cancel(item.id);
+  } catch (error) {
+    console.error('Could not stop browser download:', error);
+    await browserAPI.storage.local.set({ lastCapture: {
+      version: 1, url, filename: (item.filename || '').split(/[\\/]/).pop(), title: '',
+      status: 'Browser download was not stopped. Use the retry button if needed.', time: Date.now()
+    } });
     return;
   }
-
-  // Use the original URL for domain matching so CDN redirects don't bypass the check
-  const domain = extractDomain(downloadItem.url || url);
-  
+  // A completed file cannot be handed off as a canceled browser transfer.
+  const current = await browserAPI.downloads.search({ id: item.id }).catch(() => []);
+  if (current[0]?.state === 'complete') {
+    await browserAPI.storage.local.set({ lastCapture: {
+      version: 1, url, filename: (item.filename || '').split(/[\\/]/).pop(), title: '',
+      status: 'Browser download completed before it could be stopped.', time: Date.now()
+    } });
+    return;
+  }
+  // Remove the canceled entry from browser history; cancel removes its partial file.
+  await browserAPI.downloads.erase({ id: item.id }).catch(error =>
+    console.warn('Could not clear canceled browser download:', error)
+  );
+  const { title, pageUrl } = await findGamePage(item);
+  const payload = {
+    version: 1, url, filename: (item.filename || '').split(/[\\/]/).pop(),
+    title, pageUrl
+  };
+  const protocolUrl = 'ascendara://download?payload=' + encodeURIComponent(JSON.stringify(payload));
+  // Keep a recoverable record even if the OS prompt is dismissed.
+  await browserAPI.storage.local.set({ lastCapture: { ...payload, status: 'Opening Ascendara', time: Date.now() } });
   try {
-    const data = await browserAPI.storage.sync.get(['isEnabled', 'blockedDomains']);
-    const isEnabled = data.isEnabled ?? true;
-    // Always merge stored domains with hardcoded defaults so new defaults are
-    // never silently dropped when storage was populated before the update
-    const storedDomains = data.blockedDomains || [];
-    const blockedDomains = [...new Set([...defaultBlockedDomains, ...storedDomains])];
-    
-    if (isEnabled && isDomainBlocked(domain, blockedDomains)) {
-      try {
-        if (suggest) {
-          suggest({ 
-            filename: 'cancelled.tmp', 
-            conflictAction: 'uniquify' 
-          });
-        } else {
-          // Firefox path
-          await browserAPI.downloads.cancel(downloadItem.id);
-        }
-        
-        // Clean up any existing download
-        if (downloadItem.id) {
-          await browserAPI.downloads.erase({ id: downloadItem.id });
-        }
-        
-        // Handle the Ascendara protocol
-        browserAPI.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-          if (tabs[0]) {
-            browserAPI.tabs.update(tabs[0].id, {
-              url: 'ascendara://' + encodeURIComponent(url)
-            });
-          }
-        });
-      } catch (error) {
-        console.error('Error handling download:', error);
-        if (suggest) suggest();
-      }
-    } else if (suggest) {
-      suggest();
-    }
+    await browserAPI.tabs.create({ url: protocolUrl });
+    await browserAPI.storage.local.set({ lastCapture: { ...payload, status: 'Sent to Ascendara. Review the game name in the app.', time: Date.now() } });
   } catch (error) {
-    console.error('Error getting storage:', error);
-    if (suggest) suggest();
+    await browserAPI.storage.local.set({ lastCapture: { ...payload, status: 'Could not open Ascendara. Browser download was stopped; use Send last download again.', time: Date.now() } });
+    console.error('Download handoff failed:', error);
   }
 }
 
-// Set up download listeners based on browser
-if (typeof browser !== 'undefined') {
-  // Firefox
-  browserAPI.downloads.onCreated.addListener(async (downloadItem) => {
-    await handleDownload(downloadItem);
-  });
-} else {
-  // Chrome
-  browserAPI.downloads.onDeterminingFilename.addListener((downloadItem, suggest) => {
-    handleDownload(downloadItem, suggest);
-    return true; // Keep the suggest callback valid
-  });
-}
+browserAPI.downloads.onCreated.addListener(item => {
+  if (!captureEnabled) return;
+  void handleDownload(item).catch(error => console.error('Download capture failed:', error));
+});

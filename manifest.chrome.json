@@ -1,53 +1,58 @@
 {
-    "manifest_version": 3,
-    "name": "Ascendara Download Handler",
-    "version": "4.2",
-    "description": "Sends downloads from known (or added) providers straight to Ascendara.",
-    "permissions": [
-      "downloads",
-      "storage",
-      "cookies",
-      "tabs",
-      "webRequest"
-    ],
-    "web_accessible_resources": [{
-      "resources": ["cookie-popup.html"],
-      "matches": ["<all_urls>"]
-    }],
-    "host_permissions": [
-        "*://*.megadb.xyz/*",
-        "*://*.datanodes.to/*",
-        "*://*.spyderrock.com/*",
-        "*://*.flashbang.sh/*",
-        "*://*.gofile.io/*",
-        "*://*.pixeldrain.com/*",
-        "*://tunnel1.dlproxy.uk/*",
-        "*://*.dlproxy.site/*",
-        "*://*.qiwi.gg/*",
-        "*://*.buzzheavier.com/*",
-        "*://*.bzzhr.to/*",
-        "*://*.fafda.to/*",
-        "*://*.vikingfile.com/*",
-        "*://*.r2.cloudflarestorage.com/*",
-        "*://*.steamrip.com/*",
-        "*://steamrip.com/*"
-    ],
-    "icons": {
-        "16": "icons/ascendara-16.png",
-        "32": "icons/ascendara-32.png",
-        "48": "icons/ascendara-48.png",
-        "128": "icons/ascendara-128.png"
-    },
-    "background": {
-        "service_worker": "background.js"
-    },
-    "action": {
-        "default_popup": "popup.html",
-        "default_icon": {
-            "16": "icons/ascendara-16.png",
-            "48": "icons/ascendara-48.png",
-            "128": "icons/ascendara-128.png"
-        }
+  "manifest_version": 3,
+  "name": "Ascendara Download Handler",
+  "version": "5.0",
+  "description": "Send direct downloads from any website to Ascendara, including games outside your index.",
+  "permissions": [
+    "downloads",
+    "storage",
+    "cookies",
+    "tabs",
+    "webRequest"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "cookie-popup.html"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ],
+  "host_permissions": [
+    "*://*.megadb.xyz/*",
+    "*://*.datanodes.to/*",
+    "*://*.spyderrock.com/*",
+    "*://*.flashbang.sh/*",
+    "*://*.gofile.io/*",
+    "*://*.pixeldrain.com/*",
+    "*://tunnel1.dlproxy.uk/*",
+    "*://*.dlproxy.site/*",
+    "*://*.qiwi.gg/*",
+    "*://*.buzzheavier.com/*",
+    "*://*.bzzhr.to/*",
+    "*://*.fafda.to/*",
+    "*://*.vikingfile.com/*",
+    "*://*.r2.cloudflarestorage.com/*",
+    "*://*.steamrip.com/*",
+    "*://steamrip.com/*"
+  ],
+  "icons": {
+    "16": "icons/ascendara-16.png",
+    "32": "icons/ascendara-32.png",
+    "48": "icons/ascendara-48.png",
+    "128": "icons/ascendara-128.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/ascendara-16.png",
+      "48": "icons/ascendara-48.png",
+      "128": "icons/ascendara-128.png"
     }
   }
-  
+}
