@@ -341,6 +341,10 @@ async function findGamePage(item) {
   return { title: '', pageUrl: '' };
 }
 let captureEnabled = true;
+let recentHandoff = null;
+const handoffReady = browserAPI.storage.local.get(['recentHandoff']).then(data => {
+  recentHandoff = data.recentHandoff || null;
+});
 void browserAPI.storage.sync.get(['isEnabled']).then(prefs => {
   captureEnabled = prefs.isEnabled ?? true;
 }).catch(error => console.warn('Could not read download setting:', error));
@@ -358,7 +362,15 @@ function isCapturableDownload(item) {
 async function handleDownload(item) {
   const url = item.finalUrl || item.url;
   if (!isCapturableDownload(item)) return;
-  // Cancel immediately in onCreated, before any asynchronous storage or tab work.
+  await handoffReady;
+  const now = Date.now();
+  if (recentHandoff && now >= recentHandoff.time && (
+    now - recentHandoff.time < 10000 ||
+    (recentHandoff.url === url && now - recentHandoff.time < 30 * 60 * 1000)
+  )) return;
+  recentHandoff = { url, time: now };
+  await browserAPI.storage.local.set({ recentHandoff });
+  // Cancel accepted downloads before opening a protocol tab.
   try {
     await browserAPI.downloads.cancel(item.id);
   } catch (error) {
@@ -391,7 +403,15 @@ async function handleDownload(item) {
   // Keep a recoverable record even if the OS prompt is dismissed.
   await browserAPI.storage.local.set({ lastCapture: { ...payload, status: 'Opening Ascendara', time: Date.now() } });
   try {
-    await browserAPI.tabs.create({ url: protocolUrl });
+    const tab = await browserAPI.tabs.create({ url: protocolUrl });
+    if (tab?.id !== undefined) {
+      setTimeout(async () => {
+        try {
+          const current = await browserAPI.tabs.get(tab.id);
+          if (current.url === protocolUrl) await browserAPI.tabs.remove(tab.id);
+        } catch {}
+      }, 15000);
+    }
     await browserAPI.storage.local.set({ lastCapture: { ...payload, status: 'Sent to Ascendara. Review the game name in the app.', time: Date.now() } });
   } catch (error) {
     await browserAPI.storage.local.set({ lastCapture: { ...payload, status: 'Could not open Ascendara. Browser download was stopped; use Send last download again.', time: Date.now() } });
