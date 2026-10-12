@@ -1,0 +1,37 @@
+:root { color-scheme: dark; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #f4f2fa; background: #101014; }
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; background: radial-gradient(ellipse at 80% 0%, #29203988, transparent 55%); }
+header { display: flex; gap: 12px; align-items: center; padding: 28px 40px; font-weight: 650; }
+header small { display: block; color: #9992ab; font-size: 9px; letter-spacing: 2px; margin-top: 4px; }
+main { max-width: 850px; margin: 48px auto; padding: 0 24px; }
+.eyebrow { font-size: 11px; letter-spacing: 2px; color: #c0a2ef; display: flex; align-items: center; gap: 9px; font-weight: 650; }
+.eyebrow span { width: 6px; height: 6px; border-radius: 50%; background: #ba92f2; }
+h1 { font-size: clamp(28px, 4vw, 42px); letter-spacing: -1.4px; margin: 18px 0 12px; font-weight: 650; }
+p { color: #aaa5b6; line-height: 1.65; font-size: 14px; }
+.intro { margin-bottom: 30px; font-size: 16px; }
+.file { display: flex; gap: 18px; align-items: center; background: #1b1921; border: 1px solid #34303e; border-radius: 14px; padding: 22px; }
+.file-icon { background: #30263f; border-radius: 10px; padding: 8px 17px; font-size: 28px; color: #c5a1f7; }
+.file-info { min-width: 0; flex: 1; }
+.file h2 { font-size: 16px; margin: 0 0 5px; overflow-wrap: anywhere; }
+.file p { font-size: 12px; margin: 0; overflow-wrap: anywhere; }
+.badge { padding: 6px 9px; border: 1px solid #53432b; background: #30271c; color: #dfbd80; border-radius: 6px; font-size: 10px; letter-spacing: 1px; }
+.choices { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 22px; }
+.option { display: flex; flex-direction: column; align-items: flex-start; background: #18171d; border: 1px solid #34303e; border-radius: 14px; padding: 26px; }
+.option-icon { display: inline-flex; height: 36px; font-size: 30px; align-items: center; color: #c7c3d2; }
+.option h2 { font-size: 19px; margin: 20px 0 0; font-weight: 600; }
+.option p { margin: 10px 0 22px; }
+.ascendara { background: linear-gradient(145deg, #252031, #1b1821); border-color: #554367; }
+label { font-size: 12px; margin-bottom: 8px; }
+label span { color: #aaa5b6; }
+input { width: 100%; padding: 11px 12px; color: #fff; background: #141218; border: 1px solid #494052; border-radius: 7px; font: inherit; font-size: 13px; margin-bottom: 22px; }
+button { font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid #4e485a; border-radius: 8px; background: #2b2733; color: #f7f3ff; padding: 13px 15px; }
+.option button { width: 100%; margin-top: auto; display: flex; justify-content: space-between; gap: 10px; }
+.ascendara button { background: #ab86e1; color: #1b102b; border-color: #b898e6; }
+button:hover:not(:disabled) { filter: brightness(1.15); }
+button:disabled { opacity: .45; cursor: default; }
+:focus-visible { outline: 2px solid #d1b2ff; outline-offset: 4px; }
+#status { margin: 20px 0; color: #d2bce9; }
+footer { border-top: 1px solid #302c37; display: flex; gap: 24px; align-items: center; padding-top: 12px; }
+footer p { flex: 1; font-size: 12px; }
+.cancel { background: transparent; white-space: nowrap; color: #c0bacd; }
+@media (max-width: 600px) { header { padding: 22px 24px; } main { margin: 20px auto; } .choices { grid-template-columns: 1fr; } .file { flex-wrap: wrap; padding: 16px; } footer { flex-direction: column; align-items: flex-start; gap: 0; } }

@@ -259,15 +259,28 @@ browserAPI.webRequest.onHeadersReceived.addListener(
   headersReceivedOptions
 );
 
-browserAPI.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  console.log('Tab updated:', tabId, 'status:', changeInfo.status, 'url:', tab.url);
-  if (changeInfo.status === 'complete' && tab.url) {
-    console.log('Checking URL:', tab.url);
-    if (tab.url.startsWith('https://steamrip.com')) {
-      console.log('>>> SteamRip domain detected!');
-    }
+function rememberGameTab(tab) {
+  const page = gameDetailsForTab(tab);
+  if (page && Number.isInteger(tab.id)) {
+    const details = { ...page, time: Date.now() };
+    return browserAPI.storage.local.set({
+      [`gamePage:${tab.id}`]: details,
+      ...(tab.active ? { recentGamePage: details } : {})
+    });
   }
+}
+browserAPI.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.status === 'complete' || changeInfo.title) void rememberGameTab({ ...tab, id: tabId });
 });
+browserAPI.tabs.onActivated.addListener(async ({ tabId }) => {
+  try { await rememberGameTab(await browserAPI.tabs.get(tabId)); }
+  catch (error) { console.warn('Could not read active browser tab:', error); }
+});
+browserAPI.tabs.onRemoved.addListener(tabId => {
+  void browserAPI.storage.local.remove(`gamePage:${tabId}`);
+});
+void browserAPI.tabs.query({}).then(tabs => tabs.forEach(rememberGameTab))
+  .catch(error => console.warn('Could not read browser tabs:', error));
 
 // The main toggle controls downloads from every HTTP(S) site.
 browserAPI.runtime.onInstalled.addListener(async () => {
@@ -296,130 +309,223 @@ function gameNameFromPage(pageUrl) {
   } catch { return ''; }
 }
 
+function gameDetailsForTab(tab) {
+  const pageUrl = tab?.url || '';
+  const fromUrl = gameNameFromPage(pageUrl);
+  if (!fromUrl) return null;
+  const tabTitle = typeof tab.title === 'string'
+    ? tab.title.split(/\s+(?:[|\u2013\u2014]|-)\s+/)[0].trim()
+    : '';
+  return { title: tabTitle && !/^(download|downloads)$/i.test(tabTitle) ? tabTitle.slice(0, 200) : fromUrl, pageUrl };
+}
+
 async function findGamePage(item) {
   let tabs = [];
   try { tabs = await browserAPI.tabs.query({}); }
   catch (error) { console.warn('Could not read browser tabs:', error); }
-  const detailsForTab = tab => {
-    const pageUrl = /^https?:\/\//i.test(tab?.url || '') ? tab.url : '';
-    const fromUrl = gameNameFromPage(pageUrl);
-    if (fromUrl) return { title: fromUrl, pageUrl };
-    let tabTitle = typeof tab?.title === 'string'
-      ? tab.title.split(/\s+(?:[|\u2013\u2014]|-)\s+/)[0].trim()
-      : '';
-    const providerName = pageUrl
-      ? new URL(pageUrl).hostname.split('.').slice(-2, -1)[0]
-      : '';
-    if (providerName) tabTitle = tabTitle.replace(new RegExp(providerName, 'ig'), ' ');
-    tabTitle = tabTitle.replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim();
-    if (tabTitle && !/^(download|downloads)$/i.test(tabTitle)) {
-      return { title: tabTitle.slice(0, 200), pageUrl };
-    }
-    return null;
-  };
   // DownloadItem.tabId points to the tab that initiated this download, even
   // when the file URL is on a CDN and the browser's active tab has changed.
   const sourceTab = Number.isInteger(item.tabId) && item.tabId >= 0
     ? tabs.find(tab => tab.id === item.tabId)
     : null;
-  const sourceDetails = sourceTab && detailsForTab(sourceTab);
+  const sourceDetails = gameDetailsForTab(sourceTab);
   if (sourceDetails) return sourceDetails;
 
   const referrer = item.referrer || '';
   const referrerTab = tabs.find(tab => tab.url === referrer);
+  const referrerDetails = gameDetailsForTab(referrerTab);
+  if (referrerDetails) return referrerDetails;
   const referrerGuess = gameNameFromPage(referrer);
   if (referrerGuess) return { title: referrerGuess, pageUrl: referrer };
-  const referrerDetails = referrerTab && detailsForTab(referrerTab);
-  if (referrerDetails) return referrerDetails;
+
+  for (const tabId of [item.tabId, sourceTab?.openerTabId]) {
+    if (!Number.isInteger(tabId) || tabId < 0) continue;
+    const key = `gamePage:${tabId}`;
+    const cached = (await browserAPI.storage.local.get(key))[key];
+    if (cached && Date.now() - cached.time < 5 * 60 * 1000 &&
+        gameNameFromPage(cached.pageUrl) && typeof cached.title === 'string') {
+      return { title: cached.title, pageUrl: cached.pageUrl };
+    }
+  }
 
   // A CDN can replace the referrer. Use only an active game page, not any
   // unrelated tab that happens to be open in the browser.
-  const activeGame = tabs.find(tab => tab.active && gameNameFromPage(tab.url));
-  if (activeGame) {
-    return { title: gameNameFromPage(activeGame.url), pageUrl: activeGame.url };
+  const activeGame = tabs.find(tab => tab.active && gameDetailsForTab(tab));
+  if (activeGame) return gameDetailsForTab(activeGame);
+  const recent = (await browserAPI.storage.local.get('recentGamePage')).recentGamePage;
+  if (recent && Date.now() - recent.time < 5 * 60 * 1000 &&
+      gameNameFromPage(recent.pageUrl) && typeof recent.title === 'string') {
+    return { title: recent.title, pageUrl: recent.pageUrl };
   }
   return { title: '', pageUrl: '' };
 }
+// Keep download decisions independent of the original browser history entry.
 let captureEnabled = true;
-let recentHandoff = null;
-const handoffReady = browserAPI.storage.local.get(['recentHandoff']).then(data => {
-  recentHandoff = data.recentHandoff || null;
-});
-void browserAPI.storage.sync.get(['isEnabled']).then(prefs => {
+const settingsReady = browserAPI.storage.sync.get(['isEnabled']).then(prefs => {
   captureEnabled = prefs.isEnabled ?? true;
 }).catch(error => console.warn('Could not read download setting:', error));
 browserAPI.storage.onChanged.addListener((changes, areaName) => {
-  if (areaName === 'sync' && changes.isEnabled) {
-    captureEnabled = changes.isEnabled.newValue ?? true;
-  }
+  if (areaName === 'sync' && changes.isEnabled) captureEnabled = changes.isEnabled.newValue ?? true;
 });
+const choiceKey = id => `downloadChoice:${id}`;
+const choiceUrl = id => browserAPI.runtime.getURL(`download.html?id=${id}`);
 
-function isCapturableDownload(item) {
-  const url = item.finalUrl || item.url || '';
-  return /^https?:\/\//i.test(url) && item.byExtensionId !== browserAPI.runtime.id;
+// Some browsers omit byExtensionId on onCreated. Register the launch before
+// calling download(), then match its returned ID even if onCreated arrives first.
+const browserLaunches = new Set();
+const allowedBrowserDownloads = new Set();
+const allowanceKey = id => `browserDownload:${id}`;
+let interceptionReady = false;
+const interceptionStartup = Promise.all([
+  settingsReady,
+  browserAPI.storage.local.get(null).then(data => {
+    for (const [key, time] of Object.entries(data)) {
+      if (key.startsWith('browserDownload:') && typeof time === 'number' &&
+          Date.now() - time >= 0 && Date.now() - time < 10 * 60 * 1000) {
+        allowedBrowserDownloads.add(Number(key.slice('browserDownload:'.length)));
+      }
+    }
+  }).catch(error => console.warn('Could not restore download allowances:', error))
+]).then(() => { interceptionReady = true; });
+
+async function startBrowserDownload(url) {
+  let finish;
+  const launch = new Promise(resolve => { finish = resolve; });
+  browserLaunches.add(launch);
+  try {
+    const id = await browserAPI.downloads.download({ url });
+    allowedBrowserDownloads.add(id);
+    // Persist before releasing waiting events, for service-worker restarts.
+    await browserAPI.storage.local.set({ [allowanceKey(id)]: Date.now() }).catch(error =>
+      console.warn('Could not persist browser download allowance:', error)
+    );
+    return id;
+  } finally {
+    browserLaunches.delete(launch);
+    finish();
+  }
+}
+
+function isAllowedBrowserDownload(item) {
+  const key = allowanceKey(item.id);
+  const allowed = allowedBrowserDownloads.delete(item.id);
+  if (allowed) void browserAPI.storage.local.remove(key).catch(console.warn);
+  return allowed || item.byExtensionId === browserAPI.runtime.id;
 }
 
 async function handleDownload(item) {
+  if (item.state !== 'in_progress') return;
+  if (item.byExtensionId === browserAPI.runtime.id || isAllowedBrowserDownload(item)) return;
   const url = item.finalUrl || item.url;
-  if (!isCapturableDownload(item)) return;
-  await handoffReady;
-  const now = Date.now();
-  if (recentHandoff && now >= recentHandoff.time && (
-    now - recentHandoff.time < 10000 ||
-    (recentHandoff.url === url && now - recentHandoff.time < 30 * 60 * 1000)
-  )) return;
-  recentHandoff = { url, time: now };
-  await browserAPI.storage.local.set({ recentHandoff });
-  // Cancel accepted downloads before opening a protocol tab.
+  const mode = /^https?:\/\//i.test(url) ? 'stopped' : 'paused';
   try {
-    await browserAPI.downloads.cancel(item.id);
-  } catch (error) {
-    console.error('Could not stop browser download:', error);
-    await browserAPI.storage.local.set({ lastCapture: {
-      version: 1, url, filename: (item.filename || '').split(/[\\/]/).pop(), title: '',
-      status: 'Browser download was not stopped. Use the retry button if needed.', time: Date.now()
-    } });
-    return;
-  }
-  // A completed file cannot be handed off as a canceled browser transfer.
-  const current = await browserAPI.downloads.search({ id: item.id }).catch(() => []);
-  if (current[0]?.state === 'complete') {
-    await browserAPI.storage.local.set({ lastCapture: {
-      version: 1, url, filename: (item.filename || '').split(/[\\/]/).pop(), title: '',
-      status: 'Browser download completed before it could be stopped.', time: Date.now()
-    } });
-    return;
-  }
-  // Remove the canceled entry from browser history; cancel removes its partial file.
-  await browserAPI.downloads.erase({ id: item.id }).catch(error =>
-    console.warn('Could not clear canceled browser download:', error)
-  );
-  const { title, pageUrl } = await findGamePage(item);
-  const payload = {
-    version: 1, url, filename: (item.filename || '').split(/[\\/]/).pop(),
-    title, pageUrl
-  };
-  const protocolUrl = 'ascendara://download?payload=' + encodeURIComponent(JSON.stringify(payload));
-  // Keep a recoverable record even if the OS prompt is dismissed.
-  await browserAPI.storage.local.set({ lastCapture: { ...payload, status: 'Opening Ascendara', time: Date.now() } });
-  try {
-    const tab = await browserAPI.tabs.create({ url: protocolUrl });
-    if (tab?.id !== undefined) {
-      setTimeout(async () => {
-        try {
-          const current = await browserAPI.tabs.get(tab.id);
-          if (current.url === protocolUrl) await browserAPI.tabs.remove(tab.id);
-        } catch {}
-      }, 15000);
+    let held = false;
+    if (!interceptionReady || browserLaunches.size) {
+      // During startup or a launch race, hold the transfer BEFORE any storage
+      // reads or ID lookup waits. Resume it only if it was explicitly allowed.
+      await browserAPI.downloads.pause(item.id);
+      held = true;
+      await interceptionStartup;
+      await Promise.all([...browserLaunches]);
+      if (isAllowedBrowserDownload(item) || !captureEnabled) {
+        await browserAPI.downloads.resume(item.id);
+        return;
+      }
     }
-    await browserAPI.storage.local.set({ lastCapture: { ...payload, status: 'Sent to Ascendara. Review the game name in the app.', time: Date.now() } });
+    if (!captureEnabled) return;
+    // Stop HTTP transfers instead of depending on the server honoring a pause.
+    // Browser-local URLs cannot reliably be recreated, so retain their transfer.
+    // In the normal path cancel is the very first asynchronous browser call.
+    if (mode === 'stopped') await browserAPI.downloads.cancel(item.id);
+    else if (!held) await browserAPI.downloads.pause(item.id);
+    const [current] = await browserAPI.downloads.search({ id: item.id });
+    if (current?.state === 'complete' ||
+        (mode === 'stopped' && current?.state === 'in_progress') ||
+        (mode === 'paused' && (!current || !current.paused || current.state !== 'in_progress'))) {
+      console.warn('Download finished or could not be stopped before capture.');
+      return;
+    }
+    // Save before opening the page, and keep this record if opening the page fails.
+    // The popup can recover it without silently restarting the download.
+    const record = {
+      id: item.id, version: 1, url, browserUrl: item.url || url, mode,
+      filename: (current?.filename || item.filename || '').split(/[\\/]/).pop(),
+      mime: item.mime || '', totalBytes: current?.totalBytes || item.totalBytes,
+      title: '', pageUrl: '', status: 'pending', time: Date.now()
+    };
+    await browserAPI.storage.local.set({ [choiceKey(item.id)]: record });
+    const page = await findGamePage(item).catch(() => ({ title: '', pageUrl: '' }));
+    await browserAPI.storage.local.set({ [choiceKey(item.id)]: { ...record, ...page } });
+    await browserAPI.tabs.create({ url: choiceUrl(item.id) });
   } catch (error) {
-    await browserAPI.storage.local.set({ lastCapture: { ...payload, status: 'Could not open Ascendara. Browser download was stopped; use Send last download again.', time: Date.now() } });
-    console.error('Download handoff failed:', error);
+    console.error('Could not prepare download choices. Check the extension popup or browser downloads:', error);
   }
 }
 
+const choosing = new Set();
+async function chooseDownload(id, action, title) {
+  if (!Number.isInteger(id) || !['browser', 'ascendara', 'cancel'].includes(action)) {
+    throw new Error('Invalid download choice.');
+  }
+  if (choosing.has(id)) throw new Error('This download is already being handled.');
+  choosing.add(id);
+  try {
+    const key = choiceKey(id);
+    const record = (await browserAPI.storage.local.get(key))[key];
+    if (!record || record.status !== 'pending') throw new Error('This download has already been handled.');
+    const [current] = await browserAPI.downloads.search({ id });
+    if (action === 'browser') {
+      if (current?.state === 'complete') {
+        // A legacy paused transfer may have finished while its page was open.
+        await browserAPI.storage.local.remove(key);
+        return { ok: true, status: 'browser', message: 'This file has already downloaded in your browser.' };
+      }
+      if (current?.state === 'in_progress') {
+        if (current.paused) await browserAPI.downloads.resume(id);
+      } else if (/^https?:\/\//i.test(record.browserUrl || record.url)) {
+        await startBrowserDownload(record.browserUrl || record.url);
+      } else {
+        throw new Error('This browser-only download is no longer available. Start it again from the original page.');
+      }
+    } else if (action === 'cancel') {
+      if (current?.state === 'in_progress') await browserAPI.downloads.cancel(id);
+      if (current?.state === 'complete') {
+        await browserAPI.storage.local.remove(key);
+        return { ok: true, status: 'cancel', message: 'Choice dismissed. This file already finished downloading; it has not been deleted.' };
+      }
+    } else {
+      if (!/^https?:\/\//i.test(record.url)) throw new Error('This file can only be downloaded in your browser.');
+      const payload = {
+        version: 1, url: record.url, filename: (current?.filename || record.filename || '').split(/[\\/]/).pop(),
+        title: typeof title === 'string' ? title.trim().slice(0, 200) : record.title,
+        pageUrl: record.pageUrl
+      };
+      // Keep the saved choice until the user dismisses it, so a rejected app
+      // prompt still leaves a browser-download fallback.
+      await browserAPI.tabs.create({ url: 'ascendara://download?payload=' + encodeURIComponent(JSON.stringify(payload)) });
+      await browserAPI.storage.local.set({ lastCapture: {
+        ...payload, status: 'Ascendara requested. Approve the browser prompt and review the download in the app.', time: Date.now()
+      } });
+      return { ok: true, status: 'pending', message: 'Approve the Open Ascendara prompt. Once the file appears in the app, dismiss this choice below. If it did not open, you can still download in your browser.' };
+    }
+    // Drop signed URLs as soon as the user resolves the browser transfer.
+    await browserAPI.storage.local.remove(key);
+    return { ok: true, status: action, message: action === 'browser' ? 'Download started in your browser. Check your browser downloads for progress.' : 'Browser download canceled.' };
+  } finally {
+    choosing.delete(id);
+  }
+}
+
+browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (sender.id !== browserAPI.runtime.id || !sender.url?.startsWith(browserAPI.runtime.getURL('download.html')) || message?.type !== 'chooseDownload') return;
+  chooseDownload(message.id, message.action, message.title)
+    .then(sendResponse, error => sendResponse({ ok: false, error: error.message }));
+  return true;
+});
+
 browserAPI.downloads.onCreated.addListener(item => {
-  if (!captureEnabled) return;
   void handleDownload(item).catch(error => console.error('Download capture failed:', error));
 });
+// Do not remove pending choices on interrupted/complete/erased events. Canceling
+// intentionally emits interrupted, sometimes after the chooser has opened.
+// Only an explicit resolved choice removes its record.

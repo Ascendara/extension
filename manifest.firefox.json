@@ -1,8 +1,8 @@
 {
   "manifest_version": 2,
   "name": "Ascendara Download Handler",
-  "version": "5.1",
-  "description": "Send direct downloads from any website to Ascendara, including games outside your index.",
+  "version": "5.2",
+  "description": "Choose where each download goes: continue in your browser, send to Ascendara, or cancel.",
   "browser_specific_settings": {
     "gecko": {
       "id": "ascendara-download-blocker@ascendara.app",

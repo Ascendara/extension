@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Choose your download · Ascendara</title>
+  <link rel="stylesheet" href="download.css">
+  <script type="module" src="download.js"></script>
+</head>
+<body>
+  <header><img src="icons/ascendara-48.png" width="32" height="32" alt=""><span>Ascendara <small>DOWNLOAD HANDLER</small></span></header>
+  <main>
+    <h1>Where should this file go?</h1>
+    <p class="intro">Choose how to download this file. Nothing is sent to Ascendara until you say so.</p>
+    <section class="file" aria-label="File details">
+      <div class="file-icon" aria-hidden="true">↓</div>
+      <div class="file-info"><h2 id="filename">Loading download…</h2><p id="metadata"></p><p id="source"></p></div>
+      <span class="badge" id="badge">WAITING</span>
+    </section>
+    <div class="choices" id="choices" aria-busy="true">
+      <section class="option">
+        <span class="option-icon" aria-hidden="true">↙</span>
+        <h2>Keep it in your browser</h2>
+        <p>Documents, photos, and everyday files. Download the file using your browser.</p>
+        <button id="browser" disabled>Download in browser <span aria-hidden="true">→</span></button>
+      </section>
+      <section class="option ascendara">
+        <img src="icons/ascendara-48.png" width="36" height="36" alt="">
+        <h2>Send it to Ascendara</h2>
+        <p>Downloading a game? Open Ascendara to review the name and handle the download.</p>
+        <label for="title">Game name <span>(optional)</span></label>
+        <input id="title" maxlength="200" placeholder="Enter a game name" autocomplete="off">
+        <button id="ascendara" disabled>Open Ascendara <span aria-hidden="true">↗</span></button>
+      </section>
+    </div>
+    <p id="status" role="status" aria-live="polite">Loading download details…</p>
+    <footer><p id="hint">You can close this page and decide later from the extension popup.</p><button class="cancel" id="cancel" disabled>Cancel download</button></footer>
+  </main>
+</body>
+</html>

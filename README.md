@@ -11,7 +11,7 @@
 
 ## 🔗 About
 
-A lightweight browser extension that enhances your Ascendara experience. When enabled, it automatically detects downloads from supported providers and sends them straight to Ascendara - making downloads up to 50% faster! No manual intervention needed.
+A browser extension that stops downloads and asks where they should go: your browser or Ascendara. Keep it enabled for games and everyday files.
 
 ## 🖼️ Preview
 
@@ -39,7 +39,7 @@ A lightweight browser extension that enhances your Ascendara experience. When en
 
 - **Chrome / Edge / Chromium:** load this repository folder directly. The default `manifest.json` is Manifest V3 and matches `manifest.chrome.json`. Do not replace it with the Firefox manifest.
 - **Firefox:** make a separate copy of the extension folder and copy `manifest.firefox.json` over `manifest.json` in that copy. Load that copy through `about:debugging`. Keep the Chrome folder unchanged.
-- If Chrome displays version **4.2** or `manifest_version: 2`, it is loading an older copy or the Firefox manifest. Remove that entry and use **Load unpacked** to select this updated folder. The current extension version is **5.0**.
+- If Chrome displays version **4.2** or `manifest_version: 2`, it is loading an older copy or the Firefox manifest. Remove that entry and use **Load unpacked** to select this updated folder. The current extension version is **5.2**.
 
 ### Quick Start
 
@@ -58,9 +58,9 @@ A lightweight browser extension that enhances your Ascendara experience. When en
 ## 🎯 How to Use
 
 1. Install and enable the extension
-2. When a download starts, you'll get a prompt to open Ascendara
-3. Check "Always open in Ascendara" for future convenience
-4. Click "Open in Ascendara" to start your download
+2. Start a download to open its choice page.
+3. Choose **Download in browser**, **Open Ascendara**, or **Cancel download**.
+4. For Ascendara, review the game name and approve the external-app prompt. Dismiss the choice once it appears in the app.
 
 > 💡 **Pro tip**: Use [Arc Browser](https://arc.net/download) for the best experience with built-in ad and popup blocking.
 
@@ -88,10 +88,14 @@ Licensed under [MIT](./LICENSE) - 2026 tagoWorks
 </div>
 
 
-## Downloads from any website (v5)
+## Download choices (v5.2)
 
-Open a game in Ascendara, then start the file download in your browser. The extension guesses the game name from the page URL (for example, `/game/rest-area-simulator`) or its matching tab title and sends that suggestion to Ascendara. Ascendara autofills the name and lets you edit it before continuing. For a game outside the index, send the download from any page and enter its name. Requires an Ascendara build with the v5 download handoff.
+Web downloads are canceled before their choice page opens. Download in browser starts an explicitly allowed browser download; it is not intercepted again. Cancel download dismisses the saved choice without starting a transfer. Only Open Ascendara sends the link and editable game name to the app.
 
-When enabled, the extension forwards every HTTP(S) file download to Ascendara, regardless of website or provider. The setting stays on until you turn it off. Turn it off to keep downloads in your browser.
+Choices remain available after the original canceled entry changes state or is removed from browser history. Closing the page or requesting Ascendara keeps the choice available through the extension popup. Dismiss it after confirming the file in Ascendara. Turning the handler off affects new downloads only.
 
-The browser download is canceled immediately and its canceled entry is cleared before requesting that the OS open Ascendara. This does not confirm that the app accepted the download: approve the browser's external-app prompt and review it in Ascendara. The popup retains the last link for retry, and canceled downloads remain in browser history. Only the latest capture is retained locally; it can contain a temporary signed URL. Browser cookies are not included in download handoffs. Session-bound links, blob URLs, and providers without transferable direct links cannot be downloaded this way. Existing SteamRIP cookie setup remains separate.
+Browser-local files (such as blob URLs) are paused instead because they cannot reliably be recreated. Browser downloads begun through the choice page use the original URL, but POST requests and single-use or expired links may require starting again on the source site with the handler disabled. No browser cookies are sent to Ascendara.
+
+Download events arrive after transfers start, so very small files may complete before cancellation. The extension verifies the transfer stopped before opening its choice page. If the choice page fails to open, its saved record stays accessible from the popup; the download is not automatically restarted.
+
+Pending records, including potentially signed URLs, are stored locally until the user resolves the choice. The latest explicit Ascendara request is also retained locally. SteamRIP cookie setup remains separate. Requires an Ascendara build supporting the v5 download payload.

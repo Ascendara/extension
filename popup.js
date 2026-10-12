@@ -10,7 +10,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     toggle.classList.toggle('active', enabled);
     toggle.setAttribute('aria-pressed', String(enabled));
     status.textContent = enabled
-      ? 'Sending downloads from any website to Ascendara'
+      ? 'Ask what to do with each download'
       : 'Downloads stay in your browser';
   }
 
@@ -22,17 +22,25 @@ window.addEventListener('DOMContentLoaded', async () => {
     display(enabled);
   });
 
-  const { lastCapture } = await browserAPI.storage.local.get(['lastCapture']);
-  captureStatus.textContent = lastCapture?.status || 'Ready for downloads from any website.';
-  if (lastCapture) {
+  const records = await browserAPI.storage.local.get(null);
+  const pending = Object.values(records).filter(value => value && value.status === 'pending' && Number.isInteger(value.id));
+  captureStatus.textContent = pending.length
+    ? `${pending.length} download${pending.length === 1 ? '' : 's'} waiting for your choice.`
+    : 'Start a download to choose where it goes.';
+  if (pending.length) {
     retry.hidden = false;
+    retry.textContent = 'Review waiting downloads';
     retry.addEventListener('click', async () => {
       try {
-        await browserAPI.tabs.create({
-          url: 'ascendara://download?payload=' + encodeURIComponent(JSON.stringify(lastCapture))
-        });
+        for (const record of pending) {
+          const url = browserAPI.runtime.getURL(`download.html?id=${record.id}`);
+          const tabs = await browserAPI.tabs.query({});
+          const existing = tabs.find(tab => tab.url === url);
+          if (existing) await browserAPI.tabs.update(existing.id, { active: true });
+          else await browserAPI.tabs.create({ url });
+        }
       } catch {
-        captureStatus.textContent = 'Could not open Ascendara. Make sure it is installed.';
+        captureStatus.textContent = 'Could not open download choices. Close and reopen the extension popup to try again.';
       }
     });
   }
